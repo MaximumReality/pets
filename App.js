@@ -30,35 +30,26 @@ function App() {
   const [newPetName, setNewPetName] = useState("");
   const [newPetSpecies, setNewPetSpecies] = useState("");
 
-  // Fetch pets
+  // Fetch pets from Firestore
   useEffect(() => {
     const fetchPets = async () => {
       const snapshot = await db.collection("pets").get();
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPets(data);
     };
     fetchPets();
   }, []);
 
-  // Create pet
+  // Create new pet
   const createPet = async () => {
     if (!newPetName || !newPetSpecies) return;
 
     const key = newPetSpecies.toLowerCase();
-
     const pet = {
       name: newPetName,
       species: key,
       sprite: speciesSprites[key] || "cat.png",
-      stats: {
-        hunger: 50,
-        happiness: 50,
-        energy: 50,
-        health: 100
-      },
+      stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
       lastUpdated: Date.now()
     };
 
@@ -78,14 +69,8 @@ function App() {
     stats.hunger = Math.max(0, stats.hunger - 20);
     stats.happiness = Math.min(100, stats.happiness + 5);
 
-    await db.collection("pets").doc(id).update({
-      stats,
-      lastUpdated: Date.now()
-    });
-
-    setPets(pets.map(p =>
-      p.id === id ? { ...p, stats } : p
-    ));
+    await db.collection("pets").doc(id).update({ stats, lastUpdated: Date.now() });
+    setPets(pets.map(p => (p.id === id ? { ...p, stats } : p)));
   };
 
   return React.createElement(
@@ -103,15 +88,11 @@ function App() {
         onChange: e => setNewPetName(e.target.value)
       }),
       React.createElement("input", {
-        placeholder: "Species",
+        placeholder: "Species (e.g., Cat)",
         value: newPetSpecies,
         onChange: e => setNewPetSpecies(e.target.value)
       }),
-      React.createElement(
-        "button",
-        { onClick: createPet },
-        "Create Pet"
-      )
+      React.createElement("button", { onClick: createPet }, "Create Pet")
     ),
 
     React.createElement(
@@ -120,17 +101,8 @@ function App() {
       pets.map(pet =>
         React.createElement(
           "div",
-          {
-            key: pet.id,
-            style: {
-              border: "1px solid #ccc",
-              padding: 10,
-              marginBottom: 10
-            }
-          },
-
+          { key: pet.id, style: { border: "1px solid #ccc", padding: 10, marginBottom: 10 } },
           React.createElement("h2", null, `${pet.name} (${pet.species})`),
-
           React.createElement("img", {
             src: pet.sprite,
             alt: pet.species,
@@ -138,25 +110,16 @@ function App() {
             height: 80,
             style: { imageRendering: "pixelated" }
           }),
-
           React.createElement("div", null, `Hunger: ${pet.stats.hunger}`),
           React.createElement("div", null, `Happiness: ${pet.stats.happiness}`),
           React.createElement("div", null, `Energy: ${pet.stats.energy}`),
           React.createElement("div", null, `Health: ${pet.stats.health}`),
-
-          React.createElement(
-            "button",
-            { onClick: () => feedPet(pet.id) },
-            "Feed"
-          )
+          React.createElement("button", { onClick: () => feedPet(pet.id) }, "Feed")
         )
       )
     )
   );
 }
 
-// ===== MOUNT REACT (THIS WAS MISSING BEFORE) =====
-ReactDOM.render(
-  React.createElement(App),
-  document.getElementById("root")
-);
+// ===== Mount React =====
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
