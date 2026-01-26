@@ -7,7 +7,15 @@ const firebaseConfig = {
   messagingSenderId: "556129222317",
   appId: "1:556129222317:web:12d323a5165eb222d59024"
 };
-
+const speciesSprites = {
+  bunny: "bunny.png",
+  frog: "frog.png",
+  fox: "fox.png",
+  cat: "cat.png",
+  dragon: "dragon.png",
+  unicorn: "unicorn.png",
+  dog: "dog.png"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -48,18 +56,29 @@ function App() {
 
   // Create pet
   const createPet = async () => {
-    if (!newPetName || !newPetSpecies) return;
-    const pet = {
-      name: newPetName,
-      species: newPetSpecies,
-      stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
-      lastUpdated: Date.now()
-    };
-    const docRef = await db.collection("pets").add(pet);
-    setPets([...pets, { id: docRef.id, ...pet }]);
-    setNewPetName("");
-    setNewPetSpecies("");
+  if (!newPetName || !newPetSpecies) return;
+
+  const speciesKey = newPetSpecies.toLowerCase();
+
+  const pet = {
+    name: newPetName,
+    species: speciesKey,
+    sprite: speciesSprites[speciesKey] || "cat.png", // fallback
+    stats: {
+      hunger: 50,
+      happiness: 50,
+      energy: 50,
+      health: 100
+    },
+    lastUpdated: Date.now()
   };
+
+  const docRef = await db.collection("pets").add(pet);
+  setPets([...pets, { id: docRef.id, ...pet }]);
+
+  setNewPetName("");
+  setNewPetSpecies("");
+};
 
   // Feed pet
   const feedPet = async (id) => {
@@ -76,6 +95,7 @@ function App() {
   };
 
   return (
+ 
     React.createElement('div', { style: { padding: 20, fontFamily: 'sans-serif' } },
       React.createElement('h1', null, '🐾 Maximum Reality Pets'),
       React.createElement('div', null,
@@ -86,7 +106,18 @@ function App() {
       React.createElement('div', { style: { marginTop: 20 } },
         pets.map(pet =>
           React.createElement('div', { key: pet.id, style: { border: '1px solid #ccc', padding: 10, marginBottom: 10 } },
-            React.createElement('h2', null, `${pet.name} (${pet.species})`),
+         React.createElement('h2', null, `${pet.name} (${pet.species})`),
+          
+     React.createElement("img", {
+  src: pet.sprite,
+  alt: pet.species,
+  style: {
+    width: "80px",
+    height: "80px",
+    imageRendering: "pixelated"
+  }
+}),                   
+                                 
             React.createElement('div', null, `Hunger: ${Math.round(pet.stats.hunger)}`),
             React.createElement('div', null, `Happiness: ${Math.round(pet.stats.happiness)}`),
             React.createElement('div', null, `Energy: ${Math.round(pet.stats.energy)}`),
