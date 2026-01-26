@@ -30,7 +30,7 @@
       border-radius: 5px;
       background-color: #000;
     }
-    input { 
+    input, select { 
       margin: 5px 0; 
       width: 150px; 
       padding: 5px; 
@@ -55,7 +55,16 @@
 
   <div>
     <input id="petName" placeholder="Pet Name">
-    <input id="petSpecies" placeholder="Species">
+    <select id="petSpecies">
+      <option value="">Select Species</option>
+      <option value="cat">Cat</option>
+      <option value="dog">Dog</option>
+      <option value="bunny">Bunny</option>
+      <option value="fox">Fox</option>
+      <option value="dragon">Dragon</option>
+      <option value="unicorn">Unicorn</option>
+      <option value="frog">Frog</option>
+    </select>
     <button onclick="createPet()">Create Pet</button>
   </div>
 
@@ -92,7 +101,6 @@
     let currentPet = null;
     const petContainer = document.getElementById("petContainer");
 
-    // Render a single pet
     function renderPet(pet) {
       petContainer.innerHTML = `
         <div class="pet-card">
@@ -107,7 +115,6 @@
       `;
     }
 
-    // Fetch the latest pet
     async function fetchLatestPet() {
       const snapshot = await db.collection("pets").orderBy("lastUpdated", "desc").limit(1).get();
       if (!snapshot.empty) {
@@ -116,11 +123,11 @@
       }
     }
 
-    // Create a new pet
     async function createPet() {
-      const name = document.getElementById("petName").value;
-      const species = document.getElementById("petSpecies").value.toLowerCase();
-      if (!name || !species || !speciesSprites[species]) return alert("Invalid name or species");
+      const name = document.getElementById("petName").value.trim();
+      const species = document.getElementById("petSpecies").value;
+
+      if (!name || !species) return alert("Please enter a name and select a species.");
 
       const pet = {
         name,
@@ -138,7 +145,6 @@
       document.getElementById("petSpecies").value = "";
     }
 
-    // Feed current pet
     async function feedPet(id) {
       if (!currentPet || currentPet.id !== id) return;
 
@@ -155,7 +161,6 @@
       renderPet(currentPet);
     }
 
-    // Auto-update hunger/happiness every 10 sec
     setInterval(async () => {
       if (!currentPet) return;
       const now = Date.now();
@@ -176,7 +181,6 @@
       }
     }, 10000);
 
-    // Load latest pet on page load
     fetchLatestPet();
   </script>
 </body>
