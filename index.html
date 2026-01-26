@@ -2,20 +2,163 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🐾 Maximum Reality Pets</title>
+  <title>Maximum Reality Pets</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .pet-card { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: inline-block; width: 150px; vertical-align: top; }
+    .pet-card img { width: 80px; height: 80px; image-rendering: pixelated; }
+    input { margin: 5px 0; width: 100%; }
+    button { margin-top: 5px; }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <h1>🐾 Maximum Reality Pets</h1>
 
-  <!-- React 17 UMD (must match ReactDOM.render) -->
-  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <div>
+    <input id="petName" placeholder="Pet Name">
+    <input id="petSpecies" placeholder="Species">
+    <button onclick="createPet()">Create Pet</button>
+  </div>
 
-  <!-- Firebase 8 UMD -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <div id="petsContainer" style="margin-top: 20px;"></div>
 
-  <!-- Your App JS -->
-  <script src="App.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase config =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA",
+      authDomain: "pets-86c25.firebaseapp.com",
+      projectId: "pets-86c25",
+      storageBucket: "pets-86c25.firebasestorage.app",
+      messagingSenderId: "556129222317",
+      appId: "1:556129222317:web:12d323a5165eb222d59024"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const speciesSprites = {
+      bunny: "bunny.png",
+      frog: "frog.png",
+      fox: "fox.png",
+      cat: "cat.png",
+      dragon: "dragon.png",
+      unicorn: "unicorn.png",
+      dog: "dog.png"
+    };
+
+    const defaultPets = [
+      { name: "AzulCat", species: "cat" },
+      { name: "Fluffy", species: "dragon" },
+      { name: "Froggy", species: "frog" },
+      { name: "BunnyHop", species: "bunny" },
+      { name: "Sparkle", species: "unicorn" },
+      { name: "Foxy", species: "fox" },
+      { name: "Buddy", species: "dog" }
+    ];
+
+    const petsContainer = document.getElementById("petsContainer");
+
+    // Render pets
+    function renderPets(pets) {
+      petsContainer.innerHTML = "";
+      pets.forEach(pet => {
+        const card = document.createElement("div");
+        card.className = "pet-card";
+
+        card.innerHTML = `
+          <h3>${pet.name} (${pet.species})</h3>
+          <img src="${pet.sprite}" alt="${pet.species}">
+          <div>Hunger: ${Math.round(pet.stats.hunger)}</div>
+          <div>Happiness: ${Math.round(pet.stats.happiness)}</div>
+          <div>Energy: ${Math.round(pet.stats.energy)}</div>
+          <div>Health: ${Math.round(pet.stats.health)}</div>
+          <button onclick="feedPet('${pet.id}')">Feed</button>
+        `;
+        petsContainer.appendChild(card);
+      });
+    }
+
+    // Fetch pets from Firestore (seed if empty)
+    async function fetchPets() {
+      const snapshot = await db.collection("pets").get();
+      if (snapshot.empty) {
+        for (let pet of defaultPets) {
+          const key = pet.species.toLowerCase();
+          await db.collection("pets").add({
+            name: pet.name,
+            species: key,
+            sprite: speciesSprites[key] || "cat.png",
+            stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
+            lastUpdated: Date.now()
+          });
+        }
+      }
+      const newSnapshot = await db.collection("pets").get();
+      const pets = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderPets(pets);
+    }
+
+    // Create a new pet
+    async function createPet() {
+      const name = document.getElementById("petName").value;
+      const species = document.getElementById("petSpecies").value.toLowerCase();
+      if (!name || !species) return;
+
+      const pet = {
+        name,
+        species,
+        sprite: speciesSprites[species] || "cat.png",
+        stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
+        lastUpdated: Date.now()
+      };
+      const ref = await db.collection("pets").add(pet);
+      fetchPets();
+      document.getElementById("petName").value = "";
+      document.getElementById("petSpecies").value = "";
+    }
+
+    // Feed pet
+    async function feedPet(id) {
+      const doc = await db.collection("pets").doc(id).get();
+      const pet = doc.data();
+      const stats = { ...pet.stats };
+      stats.hunger = Math.max(0, stats.hunger - 20);
+      stats.happiness = Math.min(100, stats.happiness + 5);
+
+      await db.collection("pets").doc(id).update({
+        stats,
+        lastUpdated: Date.now()
+      });
+      fetchPets();
+    }
+
+    // Auto-update stats every 10 seconds
+    setInterval(async () => {
+      const snapshot = await db.collection("pets").get();
+      for (let doc of snapshot.docs) {
+        const pet = doc.data();
+        const now = Date.now();
+        const hoursPassed = (now - pet.lastUpdated) / (1000 * 60 * 60);
+        if (hoursPassed > 0) {
+          const stats = { ...pet.stats };
+          stats.hunger = Math.min(100, stats.hunger + 5 * hoursPassed);
+          stats.happiness = Math.max(0, stats.happiness - 3 * hoursPassed);
+          if (stats.hunger > 80 || stats.happiness < 20) {
+            stats.health = Math.max(0, stats.health - 5 * hoursPassed);
+          }
+          await db.collection("pets").doc(doc.id).update({
+            stats,
+            lastUpdated: now
+          });
+        }
+      }
+      fetchPets();
+    }, 10000);
+
+    fetchPets();
+  </script>
 </body>
 </html>
