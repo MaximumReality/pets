@@ -7,7 +7,6 @@ const firebaseConfig = {
   messagingSenderId: "556129222317",
   appId: "1:556129222317:web:12d323a5165eb222d59024"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -30,12 +29,41 @@ function App() {
   const [newPetName, setNewPetName] = useState("");
   const [newPetSpecies, setNewPetSpecies] = useState("");
 
-  // Fetch pets from Firestore
+  // Default 7 pets to seed if Firestore is empty
+  const defaultPets = [
+    { name: "AzulCat", species: "cat" },
+    { name: "Fluffy", species: "dragon" },
+    { name: "Froggy", species: "frog" },
+    { name: "BunnyHop", species: "bunny" },
+    { name: "Sparkle", species: "unicorn" },
+    { name: "Foxy", species: "fox" },
+    { name: "Buddy", species: "dog" }
+  ];
+
+  // Fetch pets and seed if empty
   useEffect(() => {
     const fetchPets = async () => {
       const snapshot = await db.collection("pets").get();
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPets(data);
+      if (snapshot.empty) {
+        // Seed default pets
+        for (let pet of defaultPets) {
+          const speciesKey = pet.species.toLowerCase();
+          await db.collection("pets").add({
+            name: pet.name,
+            species: speciesKey,
+            sprite: speciesSprites[speciesKey] || "cat.png",
+            stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
+            lastUpdated: Date.now()
+          });
+        }
+        // Fetch again after seeding
+        const newSnapshot = await db.collection("pets").get();
+        const newPets = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPets(newPets);
+      } else {
+        const existingPets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPets(existingPets);
+      }
     };
     fetchPets();
   }, []);
@@ -55,7 +83,6 @@ function App() {
 
     const ref = await db.collection("pets").add(pet);
     setPets([...pets, { id: ref.id, ...pet }]);
-
     setNewPetName("");
     setNewPetSpecies("");
   };
@@ -69,10 +96,15 @@ function App() {
     stats.hunger = Math.max(0, stats.hunger - 20);
     stats.happiness = Math.min(100, stats.happiness + 5);
 
-    await db.collection("pets").doc(id).update({ stats, lastUpdated: Date.now() });
-    setPets(pets.map(p => (p.id === id ? { ...p, stats } : p)));
+    await db.collection("pets").doc(id).update({
+      stats,
+      lastUpdated: Date.now()
+    });
+
+    setPets(pets.map(p => p.id === id ? { ...p, stats } : p));
   };
 
+  // Render
   return React.createElement(
     "div",
     { style: { padding: 20, fontFamily: "sans-serif" } },
@@ -88,7 +120,7 @@ function App() {
         onChange: e => setNewPetName(e.target.value)
       }),
       React.createElement("input", {
-        placeholder: "Species (e.g., Cat)",
+        placeholder: "Species",
         value: newPetSpecies,
         onChange: e => setNewPetSpecies(e.target.value)
       }),
@@ -101,7 +133,10 @@ function App() {
       pets.map(pet =>
         React.createElement(
           "div",
-          { key: pet.id, style: { border: "1px solid #ccc", padding: 10, marginBottom: 10 } },
+          {
+            key: pet.id,
+            style: { border: "1px solid #ccc", padding: 10, marginBottom: 10 }
+          },
           React.createElement("h2", null, `${pet.name} (${pet.species})`),
           React.createElement("img", {
             src: pet.sprite,
@@ -122,4 +157,7 @@ function App() {
 }
 
 // ===== Mount React =====
-ReactDOM.render(React.createElement(App), document.getElementById("root"));
+ReactDOM.render(
+  React.createElement(App),
+  document.getElementById("root")
+);
