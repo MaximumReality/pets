@@ -30,13 +30,13 @@ function App() {
   const [newPetSpecies, setNewPetSpecies] = useState("");
 
   const defaultPets = [
-    { name: "AzulCat", species: "cat" },
+    { name: "Azul", species: "cat" },
     { name: "Fluffy", species: "dragon" },
     { name: "Froggy", species: "frog" },
     { name: "BunnyHop", species: "bunny" },
     { name: "Sparkle", species: "unicorn" },
     { name: "Foxy", species: "fox" },
-    { name: "Buddy", species: "dog" }
+    { name: "Casper", species: "dog" }
   ];
 
   // Fetch pets and seed if empty
