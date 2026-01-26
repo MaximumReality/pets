@@ -29,7 +29,6 @@ function App() {
   const [newPetName, setNewPetName] = useState("");
   const [newPetSpecies, setNewPetSpecies] = useState("");
 
-  // Default 7 pets to seed if Firestore is empty
   const defaultPets = [
     { name: "AzulCat", species: "cat" },
     { name: "Fluffy", species: "dragon" },
@@ -56,17 +55,44 @@ function App() {
             lastUpdated: Date.now()
           });
         }
-        // Fetch again after seeding
         const newSnapshot = await db.collection("pets").get();
-        const newPets = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPets(newPets);
+        setPets(newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } else {
-        const existingPets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPets(existingPets);
+        setPets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       }
     };
     fetchPets();
   }, []);
+
+  // Auto-update stats every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const updatedPets = await Promise.all(pets.map(async pet => {
+        const now = Date.now();
+        const hoursPassed = (now - pet.lastUpdated) / (1000 * 60 * 60);
+
+        if (hoursPassed > 0) {
+          const stats = { ...pet.stats };
+          stats.hunger = Math.min(100, stats.hunger + 5 * hoursPassed);
+          stats.happiness = Math.max(0, stats.happiness - 3 * hoursPassed);
+          if (stats.hunger > 80 || stats.happiness < 20) {
+            stats.health = Math.max(0, stats.health - 5 * hoursPassed);
+          }
+
+          const updatedPet = { ...pet, stats, lastUpdated: now };
+          await db.collection("pets").doc(pet.id).update({
+            stats: stats,
+            lastUpdated: now
+          });
+          return updatedPet;
+        }
+        return pet;
+      }));
+      setPets(updatedPets);
+    }, 10000); // every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [pets]);
 
   // Create new pet
   const createPet = async () => {
@@ -108,9 +134,7 @@ function App() {
   return React.createElement(
     "div",
     { style: { padding: 20, fontFamily: "sans-serif" } },
-
     React.createElement("h1", null, "🐾 Maximum Reality Pets"),
-
     React.createElement(
       "div",
       null,
@@ -126,17 +150,13 @@ function App() {
       }),
       React.createElement("button", { onClick: createPet }, "Create Pet")
     ),
-
     React.createElement(
       "div",
       { style: { marginTop: 20 } },
       pets.map(pet =>
         React.createElement(
           "div",
-          {
-            key: pet.id,
-            style: { border: "1px solid #ccc", padding: 10, marginBottom: 10 }
-          },
+          { key: pet.id, style: { border: "1px solid #ccc", padding: 10, marginBottom: 10 } },
           React.createElement("h2", null, `${pet.name} (${pet.species})`),
           React.createElement("img", {
             src: pet.sprite,
@@ -145,10 +165,10 @@ function App() {
             height: 80,
             style: { imageRendering: "pixelated" }
           }),
-          React.createElement("div", null, `Hunger: ${pet.stats.hunger}`),
-          React.createElement("div", null, `Happiness: ${pet.stats.happiness}`),
-          React.createElement("div", null, `Energy: ${pet.stats.energy}`),
-          React.createElement("div", null, `Health: ${pet.stats.health}`),
+          React.createElement("div", null, `Hunger: ${Math.round(pet.stats.hunger)}`),
+          React.createElement("div", null, `Happiness: ${Math.round(pet.stats.happiness)}`),
+          React.createElement("div", null, `Energy: ${Math.round(pet.stats.energy)}`),
+          React.createElement("div", null, `Health: ${Math.round(pet.stats.health)}`),
           React.createElement("button", { onClick: () => feedPet(pet.id) }, "Feed")
         )
       )
