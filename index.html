@@ -20,7 +20,7 @@
       image-rendering: pixelated; 
       margin-bottom: 5px;
     }
-    input { margin: 5px 0; width: 100%; }
+    input, select { margin: 5px 0; width: 100%; }
     button { margin-top: 5px; cursor: pointer; }
   </style>
 </head>
@@ -30,7 +30,16 @@
 
 <div>
   <input id="petName" placeholder="Pet Name">
-  <input id="petSpecies" placeholder="Species (bunny, frog, fox, cat, dragon, unicorn, dog)">
+  <select id="petSpecies">
+    <option value="">Select Species</option>
+    <option value="bunny">Bunny</option>
+    <option value="frog">Frog</option>
+    <option value="fox">Fox</option>
+    <option value="cat">Cat</option>
+    <option value="dragon">Dragon</option>
+    <option value="unicorn">Unicorn</option>
+    <option value="dog">Dog</option>
+  </select>
   <button onclick="createPet()">Create Pet</button>
 </div>
 
@@ -41,7 +50,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // ===== Firebase config =====
   const firebaseConfig = {
     apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA",
     authDomain: "pets-86c25.firebaseapp.com",
@@ -53,7 +61,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // ===== Sprites from GitHub =====
   const speciesSprites = {
     bunny: "https://raw.githubusercontent.com/MaximumReality/maximum-reality-pets/main/bunny.png",
     frog: "https://raw.githubusercontent.com/MaximumReality/maximum-reality-pets/main/frog.png",
@@ -76,7 +83,6 @@
 
   const petsContainer = document.getElementById("petsContainer");
 
-  // ===== Render pets =====
   function renderPets(pets) {
     petsContainer.innerHTML = "";
     pets.forEach(pet => {
@@ -95,7 +101,6 @@
     });
   }
 
-  // ===== Fetch or seed pets =====
   async function fetchPets() {
     const snapshot = await db.collection("pets").get();
     if (snapshot.empty) {
@@ -115,11 +120,10 @@
     renderPets(pets);
   }
 
-  // ===== Create pet =====
   async function createPet() {
     const name = document.getElementById("petName").value.trim();
-    const species = document.getElementById("petSpecies").value.toLowerCase().trim();
-    if (!name || !species || !speciesSprites[species]) return alert("Invalid species!");
+    const species = document.getElementById("petSpecies").value;
+    if (!name || !species) return alert("Please enter a name and select a species!");
 
     const pet = {
       name,
@@ -134,7 +138,6 @@
     document.getElementById("petSpecies").value = "";
   }
 
-  // ===== Feed pet =====
   async function feedPet(id) {
     const doc = await db.collection("pets").doc(id).get();
     const pet = doc.data();
@@ -149,7 +152,6 @@
     fetchPets();
   }
 
-  // ===== Auto-update stats every 10s =====
   setInterval(async () => {
     const snapshot = await db.collection("pets").get();
     for (let doc of snapshot.docs) {
@@ -160,16 +162,13 @@
         const stats = { ...pet.stats };
         stats.hunger = Math.min(100, stats.hunger + 5 * hoursPassed);
         stats.happiness = Math.max(0, stats.happiness - 3 * hoursPassed);
-        if (stats.hunger > 80 || stats.happiness < 20) {
-          stats.health = Math.max(0, stats.health - 5 * hoursPassed);
-        }
+        if (stats.hunger > 80 || stats.happiness < 20) stats.health = Math.max(0, stats.health - 5 * hoursPassed);
         await db.collection("pets").doc(doc.id).update({ stats, lastUpdated: now });
       }
     }
     fetchPets();
   }, 10000);
 
-  // ===== Initial fetch =====
   fetchPets();
 </script>
 
