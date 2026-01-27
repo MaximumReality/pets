@@ -66,22 +66,29 @@ body.is-stormy {
   background: var(--glass); 
   border-radius: 20px; 
   width: 290px; 
-  /* This is the secret sauce: */
-  max-height: 70dvh; 
+  /* We lock the menu height to 60% of the screen */
+  max-height: 60vh; 
+  position: absolute;
+  top: 70px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--gold); 
-  margin-top: 10px; 
-  overflow: hidden; 
+  z-index: 10001;
 }
 
-/* Apply this to both My Pets and HOF lists */
-#myPetsList, #hofList {
-  max-height: 300px; /* Set a fixed height */
-  overflow-y: auto !important; /* Force vertical scroll */
-  -webkit-overflow-scrolling: touch; /* Smooth scroll for Safari */
+/* This is the container that MUST scroll */
+#mypetsTab, #hofTab {
+  overflow-y: scroll !important; 
+  -webkit-overflow-scrolling: touch !important; /* Forces momentum scrolling on iPhone */
+  max-height: 250px;
   padding: 10px;
 }
+
+#myPetsList, #hofList {
+  display: block;
+  width: 100%;
+}
+
 
 /* Make sure the rows stay consistent */
 .pet-row {
@@ -640,6 +647,11 @@ setInterval(toggleWeather, 40000);
 
 // Load latest pet on start
 const snap=db.collection("pets").orderBy("lastUpdated","desc").limit(1).get().then(s=>{if(!s.empty) display({id:s.docs[0].id,...s.docs[0].data()});});
+// This prevents the background from moving when you scroll the menu
+document.getElementById('createMenu').addEventListener('touchmove', function(e) {
+  e.stopPropagation();
+}, { passive: false });
+
 </script>
 </body>
 </html>
