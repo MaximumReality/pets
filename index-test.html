@@ -50,6 +50,14 @@ body {
 .wander { animation:wander 14s linear infinite alternate; }
 @keyframes wander { 0%{transform:translate(-60px,0);} 100%{transform:translate(60px,0);} }
 
+/* WEATHER & MESS */
+#weather-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; }
+.rain-drop { position:absolute; background:#4fa1ff; width:2px; height:15px; opacity:0.6; animation:rainFall 0.8s linear infinite; }
+@keyframes rainFall { 0%{transform:translateY(-100px);} 100%{transform:translateY(100vh);} }
+.mess { position:absolute; font-size:28px; z-index:6; cursor:pointer; pointer-events: auto; }
+.fly { position:absolute; font-size:14px; animation:flyBuzz 0.4s infinite alternate; z-index:100; pointer-events:none; }
+@keyframes flyBuzz { 0%{transform:translate(0,0);} 100%{transform:translate(6px,-6px);} }
+
 /* BOTTOM ACTION BAR */
 .action-bar {
   position:absolute; bottom:calc(var(--safe-bottom) + 20px); left:50%; transform:translateX(-50%);
@@ -58,10 +66,6 @@ body {
 }
 .action-bar button { background:#2a2a2a; border:1px solid #444; color:white; border-radius:50%; width:56px; height:56px; font-size:28px; }
 
-/* MESS & EFFECTS */
-.mess { position:absolute; font-size:28px; z-index:6; pointer-events:none; }
-.fly { position:absolute; font-size:14px; animation:flyBuzz 0.4s infinite alternate; z-index:100; pointer-events:none; }
-@keyframes flyBuzz { 0%{transform:translate(0,0);} 100%{transform:translate(6px,-6px);} }
 .pop { position:absolute; font-size:35px; animation:popUp 1.2s forwards; z-index:10001; pointer-events:none; }
 @keyframes popUp { 0%{opacity:1;} 100%{transform:translateY(-100px); opacity:0;} }
 
@@ -79,6 +83,8 @@ body {
 </style>
 </head>
 <body onclick="handlePetting(event)">
+
+<div id="weather-layer"></div>
 
 <div id="hud-container">
   <div class="hud-bar">
@@ -121,15 +127,12 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <script>
-// --- Config ---
-// --- Firebase Config ---
 const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// --- Game State ---
-let pet=null, isSleeping=false;
-let audioCtx, sourceNode, gainNode; // Audio variables
+let pet=null, isSleeping=false, isRaining=false;
+let audioCtx, sourceNode, gainNode, rainSource, rainGain;
 const foodMap={bunny:"🥕",fox:"🍔",dog:"🥩",dragon:"🍖",cat:"🐠",unicorn:"🍎",frog:"🪰"};
 const reactMap={bunny:"🐰",fox:"🦊",dog:"🐕",cat:"😼",frog:"🐸",dragon:"🔥",unicorn:"✨"};
 const petPositions={frog:{left:"25%",bottom:"25%"},bunny:{left:"65%",bottom:"28%"},fox:{left:"55%",bottom:"30%"},dog:{left:"50%",bottom:"32%"},cat:{left:"45%",bottom:"34%"},unicorn:{left:"70%",bottom:"36%"},dragon:{left:"50%",bottom:"60%"}};
@@ -141,6 +144,7 @@ async function initAudio() {
   gainNode = audioCtx.createGain();
   gainNode.connect(audioCtx.destination);
   
+  // Music
   try {
     const res = await fetch('happy-day.mp3');
     const ab = await res.arrayBuffer();
@@ -150,8 +154,23 @@ async function initAudio() {
     sourceNode.loop = true;
     sourceNode.connect(gainNode);
     sourceNode.start(0);
-    gainNode.gain.value = 0.5; // Default volume
-  } catch (e) { console.error("Audio failed to load:", e); }
+    gainNode.gain.value = 0.5;
+  } catch (e) { console.log("Music file missing"); }
+
+  // Rain Sound
+  try {
+    rainGain = audioCtx.createGain();
+    rainGain.connect(audioCtx.destination);
+    const rRes = await fetch('rain-thunder.mp3');
+    const rAb = await rRes.arrayBuffer();
+    const rBuf = await audioCtx.decodeAudioData(rAb);
+    rainSource = audioCtx.createBufferSource();
+    rainSource.buffer = rBuf;
+    rainSource.loop = true;
+    rainSource.connect(rainGain);
+    rainSource.start(0);
+    rainGain.gain.value = 0;
+  } catch (e) { console.log("Rain file missing"); }
 }
 
 function setVol(val, e) {
@@ -164,7 +183,58 @@ function setVol(val, e) {
   }
 }
 
-// --- HEARTBEAT ---
+// --- WEATHER & LIGHTNING ---
+function toggleWeather() {
+  const layer = document.getElementById('weather-layer');
+  layer.innerHTML = '';
+  isRaining = Math.random() < 0.4; 
+
+  if (isRaining) {
+    if (rainGain) rainGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 2);
+    for (let i = 0; i < 30; i++) {
+      const drop = document.createElement('div');
+      drop.className = 'rain-drop';
+      drop.style.left = Math.random() * 100 + '%';
+      drop.style.animationDelay = Math.random() * 2 + 's';
+      layer.appendChild(drop);
+    }
+    triggerLightning();
+    spawnPop("⛈️ Storm!", window.innerWidth / 2, 100);
+  } else {
+    if (rainGain) rainGain.gain.setTargetAtTime(0, audioCtx.currentTime, 2);
+  }
+}
+
+function triggerLightning() {
+  if (!isRaining) return;
+  setTimeout(() => {
+    if (isRaining) {
+      document.body.classList.add('flash');
+      setTimeout(() => document.body.classList.remove('flash'), 150);
+      triggerLightning();
+    }
+  }, Math.random() * 6000 + 2000);
+}
+setInterval(toggleWeather, 45000);
+
+// --- MESS LOGIC ---
+function spawnMess() {
+  const container = document.getElementById('messes');
+  if (container.children.length > 5) return; 
+  const m = document.createElement('div');
+  m.className = 'mess'; m.innerText = '💩';
+  m.style.left = (Math.random() * 60 + 20) + '%';
+  m.style.bottom = '22%';
+  m.onclick = (e) => {
+    e.stopPropagation(); m.remove();
+    spawnPop("✨", e.clientX, e.clientY);
+    pet.stats.health = Math.min(100, pet.stats.health + 2);
+    save();
+  };
+  container.appendChild(m);
+}
+
+// --- CORE GAME ENGINE ---
 function gameHeartbeat() {
   if (!pet || pet.stats.health <= 0) return;
   if (isSleeping) {
@@ -180,28 +250,17 @@ function gameHeartbeat() {
 }
 setInterval(gameHeartbeat, 5000);
 
-// --- SLEEP & STARS ---
 function toggleSleep(e) {
-  e.stopPropagation();
-  isSleeping = !isSleeping;
+  e.stopPropagation(); isSleeping = !isSleeping;
   document.body.classList.toggle('night-mode', isSleeping);
-  
-  // Volume Adjustment: Lullaby mode vs Day mode
   if (gainNode) {
     const targetVol = isSleeping ? 0.05 : 0.4; 
     gainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 1.5);
   }
-
   isSleeping ? spawnStars() : removeStars();
   save();
 }
 
-// --- REST OF CORE LOGIC ---
-function spawnMess(){
-  const m=document.createElement('div'); m.className='mess'; m.innerText='💩'; 
-  m.style.left=(Math.random()*60+20)+'%'; m.style.bottom='22%'; 
-  document.getElementById('messes').appendChild(m);
-}
 function showFlies(show) {
   document.querySelectorAll('.fly').forEach(f => f.remove());
   if (show) {
@@ -212,9 +271,11 @@ function showFlies(show) {
     }
   }
 }
+
 function checkLevelUp() {
   if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; spawnPop("✨ LVL UP!", window.innerWidth/2, 100); display(pet); }
 }
+
 function spawnStars() {
   const hud = document.getElementById('hud-container'); removeStars();
   for (let i = 0; i < 12; i++) {
@@ -235,6 +296,7 @@ function display(data){
   world.innerHTML=`<img src="${pet.species}.png" class="pet-img ${isDead?'is-ghost':''}" style="width:${80+(pet.stats.level*5)}px">`;
   updateUI();
 }
+
 function updateUI(){
   if(!pet) return; const s=pet.stats;
   document.getElementById("sn").innerHTML=`<b>${pet.name}</b> (Lv.${s.level})`;
@@ -243,17 +305,20 @@ function updateUI(){
   document.getElementById("shp").innerText=`HP:${Math.round(s.health)}%`;
   document.getElementById("resBtn").style.display=(s.health<=0)?"flex":"none";
 }
+
 function spawnPop(txt,x,y){
   const p=document.createElement("div"); p.className="pop"; p.innerText=txt; 
   p.style.left=(x-20)+"px"; p.style.top=(y-20)+"px"; 
   document.body.appendChild(p); setTimeout(()=>p.remove(),1200);
 }
+
 function feedPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   pet.stats.hunger = Math.max(0, pet.stats.hunger - 25);
   spawnPop(foodMap[pet.species] || "🍎", window.innerWidth/2, window.innerHeight/2);
   save();
 }
+
 function playPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   if(pet.stats.energy < 15) { spawnPop("💤 Tired", window.innerWidth/2, 200); return; }
@@ -262,6 +327,7 @@ function playPet(e){
   spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2);
   checkLevelUp(); save();
 }
+
 function cleanPet(e){
   e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
   pet.stats.health = Math.min(100, pet.stats.health + 10);
@@ -270,6 +336,7 @@ function cleanPet(e){
   spawnPop("🫧", window.innerWidth/2, window.innerHeight/2);
   save();
 }
+
 function doctorPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   pet.stats.health = Math.min(100, pet.stats.health + 30);
@@ -277,6 +344,7 @@ function doctorPet(e){
   spawnPop("🩺", window.innerWidth/2, window.innerHeight/2);
   save();
 }
+
 function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
 function handlePetting(e){
   if(!pet || isSleeping || pet.stats.health <= 0) return;
@@ -285,6 +353,7 @@ function handlePetting(e){
     checkLevelUp(); save();
   }
 }
+
 async function save(){ if(pet && pet.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); updateUI(); }
 async function createPet(){
   const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
@@ -297,7 +366,6 @@ async function fetchPet(){
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
 fetchPet();
-
 </script>
 </body>
 </html>
