@@ -9,82 +9,61 @@
   --glass: rgba(0, 0, 0, 0.85); 
   --gold: #ffcc00;
   --safe-top: env(safe-area-inset-top, 20px); 
-  /* Push bar up from the bottom URL/Home area */
-  --safe-bottom: env(safe-area-inset-bottom, 30px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px); /* Standard iOS home bar height */
 }
 
 body {
   margin: 0; font-family: -apple-system, sans-serif;
   background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
   background-size: cover; color: #fff; 
-  height: 100vh; width: 100%;
-  overflow: hidden; position: fixed; /* KILLS SCROLLING */
+  /* The Magic Fix: dynamic viewport height prevents Safari cutoff */
+  height: 100dvh; 
+  width: 100%;
+  overflow: hidden; 
+  position: fixed; 
   touch-action: manipulation;
   transition: filter 2s;
 }
 
-/* STORM FILTERS */
-body.is-stormy { filter: brightness(0.5) contrast(1.2) saturate(0.7) hue-rotate(190deg); }
-
-/* FULL SCREEN EFFECTS */
-#night-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 5, 20, 0.75); pointer-events: none;
-  opacity: 0; transition: opacity 1.5s; z-index: 9999;
-}
-.flash-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: white; opacity: 0; pointer-events: none; z-index: 10001;
-}
-.do-flash { animation: lightningStrike 0.15s ease-out; }
-@keyframes lightningStrike { 0% { opacity: 1; } 100% { opacity: 0; } }
-
-/* WIND & WEATHER */
-#weather-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: transform 2s; }
-.rain-drop { position: absolute; background: #4fa1ff; width: 2px; height: 15px; opacity: 0.6; animation: rainFall 0.8s linear infinite; }
-@keyframes rainFall { 0% { transform: translateY(-100px); } 100% { transform: translateY(110vh); } }
-
-/* Wind Tilt: Apply when is-stormy is active */
-body.is-stormy .rain-drop { transform: rotate(15deg); }
-body.is-stormy #game-world { transform: rotate(5deg) translateX(10px); transition: transform 2s; }
-
-/* HUD */
-#hud-container { position: absolute; top: calc(var(--safe-top) + 10px); left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; }
-.hud-bar { background: var(--glass); padding: 8px 15px; border-radius: 25px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 15px; }
-#statsBox { display: flex; gap: 10px; font-size: 11px; font-weight: bold; }
-
-/* UI FIX: Move Bar above Safari URL/Home Bar */
+/* Updated Action Bar positioning */
 .action-bar { 
   position: absolute; 
-  bottom: calc(var(--safe-bottom) + 20px); 
-  left: 50%; transform: translateX(-50%); 
-  display: flex; gap: 12px; z-index: 10000; 
-  background: rgba(0,0,0,0.8); padding: 12px 18px; border-radius: 35px; 
-  backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
+  /* Using safe-bottom + extra padding to ensure visibility */
+  bottom: calc(var(--safe-bottom) + 15px); 
+  left: 50%; 
+  transform: translateX(-50%); 
+  display: flex; 
+  gap: 12px; 
+  z-index: 10000; 
+  background: rgba(0,0,0,0.85); 
+  padding: 12px 18px; 
+  border-radius: 35px; 
+  backdrop-filter: blur(20px); 
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
 }
-.action-bar button { background: #222; border: 1px solid #444; color: white; border-radius: 50%; width: 54px; height: 54px; font-size: 26px; }
 
-/* TABBED MENU */
-#createMenu {
-  display: none; background: var(--glass); border-radius: 20px; width: 280px; 
-  box-shadow: 0 10px 40px rgba(0,0,0,0.9); border: 1px solid var(--gold);
-  z-index: 10002; overflow: hidden; margin-top: 10px;
+.action-bar button { 
+  background: #222; 
+  border: 1px solid #444; 
+  color: white; 
+  border-radius: 50%; 
+  width: 50px; 
+  height: 50px; 
+  font-size: 24px; 
+  /* Keeps the buttons from stretching */
+  flex-shrink: 0;
 }
-.menu-tabs { display: flex; background: rgba(255,255,255,0.1); }
-.tab-btn { flex: 1; padding: 10px; border: none; background: none; color: white; font-weight: bold; cursor: pointer; font-size: 11px; }
-.tab-btn.active { border-bottom: 2px solid var(--gold); color: var(--gold); }
-.menu-content { padding: 15px; max-height: 250px; overflow-y: auto; }
 
-/* PET */
-#game-world { position: absolute; z-index: 50; transition: all 0.8s ease; text-align: center; left: 50%; bottom: 32%; }
-.pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
-.wander { animation: wander 14s linear infinite alternate; }
-@keyframes wander { 0% { transform: translate(-60px, 0); } 100% { transform: translate(60px, 0); } }
+/* Adjust game world slightly so Casper isn't sitting on the buttons */
+#game-world { 
+  position: absolute; 
+  z-index: 50; 
+  left: 50%; 
+  bottom: 35%; /* Pushes Casper up slightly */
+  text-align: center;
+}
 
-.pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 10001; pointer-events: none; }
-@keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
-.food-drop { position: absolute; font-size: 45px; z-index: 50; animation: fall 1.2s ease-in forwards; }
-@keyframes fall { 0% { transform: translateY(-50px); opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }
 </style>
 </head>
 <body onclick="handlePetting(event)">
