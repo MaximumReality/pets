@@ -3,112 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 - Page Not Found</title>
+<title>404 - Lost in Maximum Reality</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 body {
     margin: 0;
-    height: 100vh;
-    background: #0b0b0b url('bg_wp.jpg') no-repeat center center fixed;
+    padding: 0;
+    background: #0a0a0a url('bg_wp.jpg') no-repeat center center fixed;
     background-size: cover;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-    color: #fff;
+    font-family: 'VT323', monospace;
+    color: #ff00ff;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
+    height: 100vh;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
 }
 
-/* Glitchy Text */
-.glitch {
-    font-size: 3rem;
+/* Layered glitchy 404 */
+h1 {
+    font-size: 4rem;
+    margin: 0 0 20px 0;
     position: relative;
     color: #ff00ff;
-    text-transform: uppercase;
-    text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #39ff14;
-    animation: flicker 2s infinite;
+    z-index: 10;
+    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
 }
 
-.glitch::before,
-.glitch::after {
-    content: '404';
+h1::before, h1::after {
+    content: attr(data-text);
     position: absolute;
     left: 0;
+    top: 0;
+    width: 100%;
+    color: #00ff41;
+    text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41;
+    z-index: -1;
 }
 
-.glitch::before {
-    text-shadow: 2px 0 #00fff7;
-    clip: rect(0,900px,0,0);
-    animation: glitchTop 2s infinite linear alternate-reverse;
+h1::after {
+    color: #ffcc00;
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00;
+    animation: glitch 1.2s infinite linear alternate-reverse;
 }
 
-.glitch::after {
-    text-shadow: -2px 0 #ffea00;
-    clip: rect(0,900px,0,0);
-    animation: glitchBottom 2s infinite linear alternate-reverse;
+@keyframes glitch {
+    0% { clip: rect(0, 9999px, 0, 0); transform: skew(0deg); }
+    5% { clip: rect(10px, 9999px, 50px, 0); transform: skew(1deg); }
+    10% { clip: rect(30px, 9999px, 60px, 0); transform: skew(-1deg); }
+    15% { clip: rect(50px, 9999px, 80px, 0); transform: skew(0.5deg); }
+    20% { clip: rect(20px, 9999px, 40px, 0); transform: skew(-0.5deg); }
+    100% { clip: rect(0, 9999px, 0, 0); transform: skew(0deg); }
 }
 
-@keyframes flicker {0%,19%,21%,23%,25%,54%,56%,100% {opacity:1;}20%,22%,24%,55%{opacity:0.4;}}
-@keyframes glitchTop {0% {clip: rect(0, 9999px, 0, 0);} 10% {clip: rect(0, 9999px, 25px, 0);} 20% {clip: rect(5px, 9999px, 30px, 0);} 30% {clip: rect(0, 9999px, 10px, 0);} 40% {clip: rect(10px, 9999px, 35px, 0);} 50% {clip: rect(0, 9999px, 25px, 0);} 60% {clip: rect(15px, 9999px, 40px, 0);} 70% {clip: rect(0, 9999px, 20px, 0);} 80% {clip: rect(5px, 9999px, 30px, 0);} 90% {clip: rect(0, 9999px, 25px, 0);} 100% {clip: rect(0, 9999px, 0, 0);}}
-@keyframes glitchBottom {0% {clip: rect(0, 9999px, 0, 0);} 10% {clip: rect(15px, 9999px, 40px, 0);} 20% {clip: rect(5px, 9999px, 30px, 0);} 30% {clip: rect(0, 9999px, 20px, 0);} 40% {clip: rect(10px, 9999px, 35px, 0);} 50% {clip: rect(0, 9999px, 25px, 0);} 60% {clip: rect(5px, 9999px, 30px, 0);} 70% {clip: rect(0, 9999px, 10px, 0);} 80% {clip: rect(15px, 9999px, 40px, 0);} 90% {clip: rect(0, 9999px, 25px, 0);} 100% {clip: rect(0, 9999px, 0, 0);}}
-
-/* Subtitle */
-.subtitle {
-    margin-top: 20px;
-    color: #39ff14;
+/* Message & button */
+p {
     font-size: 1.2rem;
-    text-shadow: 0 0 8px #39ff14;
-    animation: pulse 2s infinite alternate;
+    margin: 20px 0 30px;
+    color: #ffffff;
+    text-shadow: 0 0 5px #39ff14;
 }
 
-@keyframes pulse { from {text-shadow:0 0 8px #39ff14;} to {text-shadow:0 0 20px #39ff14;} }
+a.home-link {
+    display: inline-block;
+    padding: 12px 20px;
+    color: #000;
+    background: #ff00ff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 0 15px #ff00ff;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    position: relative;
+}
+
+a.home-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px #ff00ff, 0 0 50px #39ff14;
+}
 
 /* Casper Sprite */
 #casper {
     position: absolute;
-    bottom: 10px;
-    left: -120px;
-    width: 120px;
-    filter: drop-shadow(0 0 10px #ff00ff) drop-shadow(0 0 5px #39ff14);
-    animation: casperWalk 6s linear infinite alternate;
-}
-
-@keyframes casperWalk {
-    0% { left: -120px; transform: scaleX(1); }
-    50% { left: calc(100% - 120px); transform: scaleX(1); }
-    51% { transform: scaleX(-1); }
-    100% { left: 0; transform: scaleX(-1); }
-}
-
-/* Home Button */
-a.home-btn {
-    position: absolute;
     bottom: 20px;
-    right: 20px;
-    background: #ff00ff;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 12px;
-    font-weight: bold;
-    text-decoration: none;
-    box-shadow: 0 0 12px #ff00ff;
-    transition: all 0.2s ease;
+    left: -150px; /* Start off-screen */
+    width: 120px;
+    height: auto;
+    z-index: 500;
+    animation: walkRight 8s linear infinite;
 }
-a.home-btn:hover {
-    background: #39ff14;
-    color: #000;
-    box-shadow: 0 0 20px #39ff14;
+
+@keyframes walkRight {
+    0% { left: -150px; transform: scaleX(1); }
+    50% { left: 50%; transform: scaleX(1); }
+    100% { left: 100%; transform: scaleX(1); }
 }
 </style>
 </head>
 <body>
-<div style="text-align:center; z-index:1;">
-    <div class="glitch">404</div>
-    <div class="subtitle">Oops! The page you are looking for wandered off...</div>
-</div>
+
+<h1 class="glitch" data-text="404 ERROR">404 ERROR</h1>
+<p>Oops! Looks like this pixelated path doesn't exist in the Maximum Reality Universe.</p>
+<a href="https://maximumreality.xyz/" class="home-link">🏠 Return Home</a>
 
 <img src="https://maximumreality.github.io/pets/dog.png" id="casper" alt="Casper the French Bulldog">
 
-<a href="https://maximumreality.xyz/" class="home-btn">🏠 Home</a>
 </body>
 </html>
