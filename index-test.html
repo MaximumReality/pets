@@ -127,8 +127,7 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-<script>
-const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
+<script>const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -140,9 +139,10 @@ const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"�
 // --- ACTIONS ---
 function feedPet(e) {
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
-  pet.stats.hunger = Math.max(0, pet.stats.hunger - 20);
+  pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); // Decrease hunger
   const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🍎";
   f.style.left = "50%"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
+  updateUI(); // Refresh screen immediately
   save();
 }
 
@@ -152,16 +152,18 @@ function cleanPet(e) {
   document.querySelectorAll('.mess').forEach(m => m.style.opacity = '0');
   setTimeout(() => document.getElementById('messes').innerHTML = '', 500);
   spawnPop("🫧", window.innerWidth/2, window.innerHeight/2);
+  updateUI();
   save();
 }
 
 function playPet(e) {
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
-  if(pet.stats.energy < 15) { spawnPop("💤 Need Sleep", window.innerWidth/2, 200); return; }
+  if(pet.stats.energy < 15) { spawnPop("💤 Too Tired", window.innerWidth/2, 200); return; }
   pet.stats.energy = Math.max(0, pet.stats.energy - 15);
   pet.stats.xp += 20;
   spawnPop("⚽️ XP++", window.innerWidth/2, window.innerHeight/2);
   checkLevelUp();
+  updateUI();
   save();
 }
 
@@ -170,6 +172,7 @@ function doctorPet(e) {
   pet.stats.health = Math.min(100, pet.stats.health + 30);
   triggerFlash();
   spawnPop("🩺", window.innerWidth/2, window.innerHeight/2);
+  updateUI();
   save();
 }
 
@@ -181,7 +184,30 @@ function checkLevelUp() {
   }
 }
 
-// --- WORLD EFFECTS ---
+// --- SURVIVAL LOOP (The Heartbeat) ---
+function gameHeartbeat() {
+  if (!pet || pet.stats.health <= 0) return;
+
+  if (isSleeping) {
+    // RECHARGE ENERGY while in the dark
+    pet.stats.energy = Math.min(100, pet.stats.energy + 10);
+    spawnPop("💤", window.innerWidth/2, window.innerHeight/2);
+  } else {
+    // DRAIN energy and INCREASE hunger while awake
+    pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
+    pet.stats.energy = Math.max(0, pet.stats.energy - 1);
+
+    // If starving or exhausted, lose health
+    if (pet.stats.hunger > 95 || pet.stats.energy <= 0) {
+      pet.stats.health = Math.max(0, pet.stats.health - 2);
+    }
+  }
+  updateUI(); // Keeps the numbers moving on screen
+  save();
+}
+setInterval(gameHeartbeat, 5000); // Runs every 5 seconds
+
+// --- WEATHER & AUDIO ---
 function triggerFlash() {
   const flashLayer = document.getElementById('flash-layer');
   flashLayer.classList.add('do-flash');
@@ -201,14 +227,12 @@ function toggleWeather() {
     triggerLightningLoop();
   }
 }
-
 function triggerLightningLoop() {
   if(!isRaining) return;
   setTimeout(() => { triggerFlash(); if(Math.random() > 0.7) triggerLightningLoop(); }, Math.random() * 10000 + 5000);
 }
 setInterval(toggleWeather, 30000);
 
-// --- CORE ---
 async function initAudio() {
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -227,16 +251,16 @@ function toggleSleep(e) {
   const overlay = document.getElementById('night-overlay');
   overlay.style.opacity = isSleeping ? "1" : "0";
   if(gainNode) gainNode.gain.setTargetAtTime(isSleeping ? 0.05 : 0.4, audioCtx.currentTime, 1.5);
-  if(isSleeping) spawnPop("💤", window.innerWidth/2, window.innerHeight/2);
+  updateUI();
   save();
 }
 
+// --- MENU & FIREBASE ---
 function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; if(m.style.display==='block') fetchHOF(); }
 function switchTab(t) {
   ['helpTab','hofTab','adoptTab'].forEach(id => document.getElementById(id).style.display = id.startsWith(t) ? 'block' : 'none');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(t)));
 }
-
 async function fetchHOF() {
   const snap = await db.collection("pets").orderBy("stats.level", "desc").limit(5).get();
   document.getElementById('hofList').innerHTML = snap.docs.map(d => `<div class="hof-entry"><span>${emojiMap[d.data().species]||'🐾'} ${d.data().name}</span><b>Lv.${d.data().stats.level}</b></div>`).join('');
@@ -249,7 +273,6 @@ function display(data){
   world.innerHTML = `<img src="${pet.species}.png" class="pet-img" style="width:${80+(pet.stats.level*5)}px">`;
   updateUI();
 }
-
 function updateUI(){
   if(!pet) return; const s=pet.stats;
   document.getElementById("sn").innerHTML=`<b>${pet.name}</b>`;
@@ -257,11 +280,8 @@ function updateUI(){
   document.getElementById("se").innerText=`E:${Math.round(s.energy)}%`;
   document.getElementById("shp").innerText=`HP:${Math.round(s.health)}%`;
 }
-
 async function save(){ if(pet?.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); }
-
 function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕", e.clientX, e.clientY); checkLevelUp(); save(); }}
-
 function spawnPop(t,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=t; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
 
 async function createPet(){
@@ -270,14 +290,12 @@ async function createPet(){
   display({id:res.id,name:n,species:s,stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
   document.getElementById('createMenu').style.display='none';
 }
-
 async function fetchPet(){
   const snap=await db.collection("pets").orderBy("lastUpdated","desc").limit(1).get();
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
-
 fetchPet();
-setInterval(() => { if(pet && !isSleeping) { pet.stats.hunger = Math.min(100, pet.stats.hunger+2); updateUI(); save(); }}, 5000);
+
 </script>
 </body>
 </html>
