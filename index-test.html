@@ -96,6 +96,38 @@ body.is-stormy {
 @keyframes popUp { 0% { opacity: 1; top: 50%; } 100% { opacity: 0; top: 40%; } }
 
 select, input { width: 80%; background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 16px; }
+#myPetsList {
+  max-height: 250px; /* Limits height so it doesn't push the menu off-screen */
+  overflow-y: auto;  /* Enables scrolling */
+  padding-right: 5px;
+}
+
+/* Custom Scrollbar for a cleaner look */
+#myPetsList::-webkit-scrollbar { width: 5px; }
+#myPetsList::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+.pet-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.delete-btn {
+  background: #ff4444 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
 </style>
 </head>
 <body onclick="handlePetting(event)">
@@ -281,25 +313,57 @@ setInterval(toggleWeather, 30000);
 
 // --- MULTI-PET SYSTEM ---
 async function fetchMyPets() {
-  const snap = await db.collection("pets").orderBy("lastUpdated", "desc").limit(10).get();
+  const snap = await db.collection("pets").orderBy("lastUpdated", "desc").get();
   const list = document.getElementById('myPetsList');
+  
+  if (snap.empty) {
+    list.innerHTML = "<div style='text-align:center; padding:20px;'>No pets found. Adopt one!</div>";
+    return;
+  }
+
   list.innerHTML = snap.docs.map(doc => {
     const p = doc.data();
-    return `<div onclick="loadPet('${doc.id}')" style="padding:10px; background:rgba(255,255,255,0.1); margin:5px; border-radius:10px;">
-      ${emojiMap[p.species] || '🐾'} ${p.name} (Lv.${p.stats.level})
-    </div>`;
+    const isGhost = p.stats.health <= 0;
+    return `
+      <div class="pet-row">
+        <div onclick="loadPet('${doc.id}')" style="flex-grow:1; cursor:pointer;">
+          ${isGhost ? '👻' : (emojiMap[p.species] || '🐾')} 
+          <b>${p.name}</b> <small>(Lv.${p.stats.level})</small>
+        </div>
+        <button class="delete-btn" onclick="deletePet('${doc.id}', '${p.name}', event)">🗑️</button>
+      </div>
+    `;
   }).join('');
+}
+
+async function deletePet(id, name, e) {
+  e.stopPropagation(); // Prevents loading the pet while trying to delete it
+  if (confirm(`Are you sure you want to say goodbye to ${name} forever?`)) {
+    await db.collection("pets").doc(id).delete();
+    // If the currently loaded pet is the one deleted, clear the screen
+    if (pet && pet.id === id) {
+      pet = null;
+      document.getElementById("game-world").innerHTML = "<h3>Select or Adopt a Pet</h3>";
+    }
+    fetchMyPets(); // Refresh the list
+    spawnPop("🗑️ Deleted");
+  }
 }
 
 async function loadPet(id) {
   const doc = await db.collection("pets").doc(id).get();
   if(doc.exists) {
+    // Reset the "night" if switching pets
     isSleeping = false;
     document.getElementById('night-overlay').style.opacity = "0";
+    if(gainNode) gainNode.gain.setTargetAtTime(0.4, audioCtx.currentTime, 1);
+    
     display({id: doc.id, ...doc.data()});
     document.getElementById('createMenu').style.display = 'none';
+    spawnPop("👋 Hello!");
   }
 }
+
 
 // --- UTILS ---
 function display(data){
