@@ -1,80 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Maximum Reality Pets</title>
-  <style>
-    body { 
-      margin: 0;
-      font-family: sans-serif; 
-      background: url('bg_wp.jpg') no-repeat center center fixed;
-      background-size: cover;
-      overflow: hidden;
-      height: 100vh;
-      position: relative;
-    }
-    #callBar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      gap: 5px;
-      background-color: rgba(0,0,0,0.5);
-      padding: 5px;
-      border-radius: 8px;
-      z-index: 100;
-    }
-    #callBar button {
-      padding: 5px 8px;
-      font-weight: bold;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background-color: #ffcc00;
-    }
-    .pet {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      image-rendering: pixelated;
-      transition: transform 0.3s;
-      box-shadow: 0 0 10px rgba(255,255,255,0.8);
-    }
-    .stats-box {
-      position: absolute;
-      background-color: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 5px 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      text-align: center;
-      pointer-events: none;
-    }
-    .food {
-      position: absolute;
-      font-size: 24px;
-      animation: floatUp 2s linear forwards;
-      z-index: 50;
-    }
-    @keyframes floatUp {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-60px); opacity: 0; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>🐾 Maximum Reality Pets</title>
+<style>
+  body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    overflow: hidden; 
+    background: url('bg_wp.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    height: 100vh;
+  }
+
+  .pet {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    image-rendering: pixelated;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #fff;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .stats-box {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0,0,0,0.6);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 200px;
+  }
+
+  .call-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .call-bar button {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #ffcc00;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .food {
+    position: absolute;
+    font-size: 32px;
+    pointer-events: none;
+    animation: drop 2s linear forwards;
+  }
+
+  @keyframes drop {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(100px); opacity: 0; }
+  }
+</style>
 </head>
 <body>
-  <div id="callBar"></div>
-  <div id="root"></div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<div class="call-bar" id="callBar"></div>
+<div class="stats-box" id="statsBox"></div>
 
-  <!-- React -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-  <!-- App -->
-  <script src="App.js" type="text/babel"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Firebase setup
+const firebaseConfig = {
+  apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA",
+  authDomain: "pets-86c25.firebaseapp.com",
+  projectId: "pets-86c25",
+  storageBucket: "pets-86c25.firebasestorage.app",
+  messagingSenderId: "556129222317",
+  appId: "1:556129222d59024"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Sprites and default pets
+const speciesSprites = {
+  bunny: "bunny.png",
+  frog: "frog.png",
+  fox: "fox.png",
+  cat: "cat.png",
+  dragon: "dragon.png",
+  unicorn: "unicorn.png",
+  dog: "dog.png"
+};
+
+const defaultPets = [
+  { name: "Azul", species: "cat", zone: "mid" },
+  { name: "Fluffy", species: "dragon", zone: "sky" },
+  { name: "Froggy", species: "frog", zone: "pond" },
+  { name: "BunnyHop", species: "bunny", zone: "grass" },
+  { name: "Sparkle", species: "unicorn", zone: "mid" },
+  { name: "Foxy", species: "fox", zone: "forest" },
+  { name: "Casper", species: "dog", zone: "house" }
+];
+
+const foodEmoji = {
+  dog: "🥩",
+  frog: "🪰",
+  cat: "🐠",
+  dragon: "🍖",
+  unicorn: "🍎",
+  bunny: "🥕",
+  fox: "🍔"
+};
+
+// Zones (x, y positions)
+const zones = {
+  pond: {x: 50, y: window.innerHeight - 150},
+  grass: {x: window.innerWidth - 150, y: window.innerHeight - 150},
+  house: {x: window.innerWidth/2, y: window.innerHeight - 150},
+  mid: {x: window.innerWidth/2 - 50, y: window.innerHeight/2},
+  sky: {x: window.innerWidth/2 - 50, y: 50},
+  forest: {x: window.innerWidth - 200, y: window.innerHeight/2}
+};
+
+function App() {
+  const [pets, setPets] = useState([]);
+  const [currentPet, setCurrentPet] = useState(null);
+
+  // Fetch pets
+  useEffect(() => {
+    const fetchPets = async () => {
+      const snapshot = await db.collection("pets").get();
+      if (snapshot.empty) {
+        for (let pet of defaultPets) {
+          await db.collection("pets").add({
+            name: pet.name,
+            species: pet.species,
+            sprite: speciesSprites[pet.species],
+            stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
+            zone: pet.zone,
+            lastUpdated: Date.now()
+          });
+        }
+      }
+      const newSnapshot = await db.collection("pets").get();
+      const allPets = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPets(allPets);
+      setCurrentPet(allPets[0]);
+    };
+    fetchPets();
+  }, []);
+
+  // Feed function
+  const feedPet = async () => {
+    if (!currentPet) return;
+    const stats = {...currentPet.stats};
+    stats.hunger = Math.max(0, stats.hunger - 20);
+    stats.happiness = Math.min(100, stats.happiness + 5);
+    await db.collection("pets").doc(currentPet.id).update({ stats, lastUpdated: Date.now() });
+    setCurrentPet({...currentPet, stats});
+    spawnFood(currentPet);
+  };
+
+  // Spawn food emoji
+  const spawnFood = (pet) => {
+    const f = document.createElement("div");
+    f.className = "food";
+    f.innerText = foodEmoji[pet.species];
+    f.style.left = (zones[pet.zone].x + Math.random()*50) + "px";
+    f.style.top = (zones[pet.zone].y) + "px";
+    document.body.appendChild(f);
+    setTimeout(() => document.body.removeChild(f), 2000);
+  };
+
+  // Render call bar
+  useEffect(() => {
+    const bar = document.getElementById("callBar");
+    bar.innerHTML = "";
+    pets.forEach(p => {
+      const btn = document.createElement("button");
+      btn.innerText = p.name;
+      btn.onclick = () => setCurrentPet(p);
+      bar.appendChild(btn);
+    });
+  }, [pets]);
+
+  // Animate pet
+  useEffect(() => {
+    if (!currentPet) return;
+    const petEl = document.getElementById("petSprite");
+    if (!petEl) return;
+    let dx = (Math.random()*4 - 2);
+    let dy = (Math.random()*4 - 2);
+    const interval = setInterval(() => {
+      let rect = petEl.getBoundingClientRect();
+      let x = rect.left + dx;
+      let y = rect.top + dy;
+      if (x < 0 || x > window.innerWidth - 100) dx *= -1;
+      if (y < 0 || y > window.innerHeight - 100) dy *= -1;
+      petEl.style.left = x + "px";
+      petEl.style.top = y + "px";
+    }, 50);
+    return () => clearInterval(interval);
+  }, [currentPet]);
+
+  return (
+    <>
+      {currentPet && (
+        <img 
+          id="petSprite"
+          src={currentPet.sprite} 
+          className="pet"
+          style={{left: zones[currentPet.zone].x, top: zones[currentPet.zone].y}}
+          alt={currentPet.species}
+          onClick={feedPet}
+        />
+      )}
+      <div className="stats-box">
+        {currentPet && (
+          <>
+            <h3>{currentPet.name} ({currentPet.species})</h3>
+            <div>Hunger: {Math.round(currentPet.stats.hunger)}</div>
+            <div>Happiness: {Math.round(currentPet.stats.happiness)}</div>
+            <div>Energy: {Math.round(currentPet.stats.energy)}</div>
+            <div>Health: {Math.round(currentPet.stats.health)}</div>
+            <button onClick={feedPet}>Feed</button>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.body).render(<App />);
+</script>
+
 </body>
 </html>
