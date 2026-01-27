@@ -3,90 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Reality Pets: Island Proof</title>
+  <title>Reality Pets: Fixed Pro</title>
   <style>
     :root { 
       --glass: rgba(0, 0, 0, 0.85); 
       --gold: #ffcc00;
-      /* This is the secret for the Dynamic Island */
-      --safe-top: env(safe-area-inset-top); 
+      --safe-top: env(safe-area-inset-top, 44px); 
     }
     
     body {
       margin: 0; font-family: -apple-system, sans-serif;
       background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
       background-size: cover; color: #fff; overflow: hidden; height: 100vh;
-      /* Prevent scrolling/bouncing on iPhone */
       position: fixed; width: 100%;
+      /* STOPS the "typing/selection" reaction on tap */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    /* Fixed UI Layer - Will NOT move when pet is tapped */
+    /* Fixed UI Layer */
     .ui-layer {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; /* Allows clicks to pass through to pet */
       z-index: 100;
+      pointer-events: none; /* Let clicks pass through BY DEFAULT */
     }
 
-    /* Stats Box - Offset further down to clear the Island */
+    /* Stats - Pushed down to clear Dynamic Island */
     .stats-mini {
       position: absolute; 
-      top: calc(var(--safe-top) + 20px); /* Extra 20px breathing room */
+      top: calc(var(--safe-top) + 15px); 
       right: 15px;
       background: var(--glass); padding: 12px; border-radius: 18px;
       font-size: 11px; backdrop-filter: blur(15px);
       border: 1px solid rgba(255,255,255,0.1);
-      pointer-events: auto; /* Enable clicks here */
+      pointer-events: auto; /* ALLOW clicks here */
     }
 
     .menu-wrap { 
       position: absolute; 
-      top: calc(var(--safe-top) + 20px); 
+      top: calc(var(--safe-top) + 15px); 
       left: 15px; 
-      pointer-events: auto;
+      pointer-events: auto; /* ALLOW clicks here */
     }
 
-    /* Pet Stage */
-    .pet-stage { 
-      position: absolute; 
-      transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-      z-index: 5;
-    }
-
-    .pet-img { 
-      image-rendering: pixelated;
-      filter: drop-shadow(0 0 15px rgba(255,255,255,0.35));
-      cursor: pointer;
-    }
-
-    /* Animations */
-    .wander { animation: wander 14s linear infinite alternate; }
-    @keyframes wander {
-      0% { transform: translateX(-100px); }
-      100% { transform: translateX(100px); }
-    }
-
-    .react { animation: react 0.4s ease-out; }
-    @keyframes react {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.15) rotate(-3deg); }
-      100% { transform: scale(1); }
-    }
-
-    .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 20px cyan) !important; }
-
-    /* Action Bar */
+    /* Action Bar - Fixed Pointer Events */
     .action-bar {
       position: absolute; bottom: env(safe-area-inset-bottom, 30px);
       left: 50%; transform: translateX(-50%);
-      display: flex; gap: 10px; pointer-events: auto;
+      display: flex; gap: 10px; 
       background: rgba(255,255,255,0.1); padding: 10px; border-radius: 25px;
       backdrop-filter: blur(15px);
+      pointer-events: auto; /* ALLOW clicks here */
     }
+
     .action-bar button {
       background: var(--glass); border: 1px solid rgba(255,255,255,0.2);
-      color: white; border-radius: 50%; width: 48px; height: 48px; font-size: 20px;
+      color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
     }
+
+    /* Pet Logic */
+    .pet-stage { position: absolute; transition: all 0.8s ease; z-index: 5; }
+    .pet-img { filter: drop-shadow(0 0 15px rgba(255,255,255,0.35)); cursor: pointer; }
+    .wander { animation: wander 14s linear infinite alternate; }
+    @keyframes wander { 0% { transform: translateX(-80px); } 100% { transform: translateX(80px); } }
+    .react { animation: react 0.4s ease-out; }
+    @keyframes react { 0% { transform: scale(1); } 40% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 20px cyan) !important; }
 
     .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; pointer-events: none; z-index: 200; }
     @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
@@ -96,7 +81,7 @@
 
   <div class="ui-layer">
     <div class="menu-wrap">
-      <button class="gear-btn" onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; padding:10px; font-size:20px;">⚙️</button>
+      <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; padding:10px; font-size:20px;">⚙️</button>
       <div id="createMenu" style="display:none; background:var(--glass); padding:15px; border-radius:15px; margin-top:10px; width:150px;">
         <input id="petName" placeholder="Name" style="width:100%; margin-bottom:5px;">
         <select id="petSpecies" style="width:100%; margin-bottom:5px;">
@@ -133,7 +118,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Config (Keep your original config here)
     const firebaseConfig = { apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain: "pets-86c25.firebaseapp.com", projectId: "pets-86c25", storageBucket: "pets-86c25.firebasestorage.app", messagingSenderId: "556129222317", appId: "1:556129222317:web:12d323a5165eb222d59024" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -142,28 +126,19 @@
     let isSleeping = false;
     const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎", frog:"🪰" };
     const reactMap = { bunny: "🐰", fox: "🦊", dog: "🐕", cat: "😼", frog: "🐸", dragon: "🔥", unicorn: "✨" };
+    const petPositions = { frog: { left: "25%", bottom: "18%" }, bunny: { left: "65%", bottom: "20%" }, fox: { left: "55%", bottom: "22%" }, dog: { left: "50%", bottom: "25%" }, cat: { left: "45%", bottom: "26%" }, unicorn: { left: "70%", bottom: "28%" }, dragon: { left: "50%", bottom: "55%" } };
     const roamingPets = ["bunny", "fox", "dog", "cat"];
-    const petPositions = {
-      frog: { left: "25%", bottom: "18%" },
-      bunny: { left: "65%", bottom: "20%" },
-      fox: { left: "55%", bottom: "22%" },
-      dog: { left: "50%", bottom: "25%" },
-      cat: { left: "45%", bottom: "26%" },
-      unicorn: { left: "70%", bottom: "28%" },
-      dragon: { left: "50%", bottom: "55%" }
-    };
 
     function display(data) {
       pet = data;
       const world = document.getElementById("game-world");
       const isDead = pet.stats.health <= 0;
-      const size = 80 + (pet.stats.level * 5); // Back to baby size
-
+      const size = 80 + (pet.stats.level * 5);
       const pos = petPositions[pet.species] || { left:"50%", bottom:"28%" };
+
       world.style.left = pos.left;
       world.style.bottom = pos.bottom;
       world.classList.toggle("wander", roamingPets.includes(pet.species) && !isDead);
-
       world.innerHTML = `<img src="${pet.species}.png" class="pet-img ${isDead ? 'is-ghost' : ''}" style="width:${size}px">`;
       document.getElementById("resBtn").style.display = isDead ? "flex" : "none";
       updateUI();
@@ -179,14 +154,12 @@
       }
     }
 
+    function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
     function spawnEffect(txt, x, y) {
       const p = document.createElement("div"); p.className = "pop"; p.innerText = txt;
       p.style.left = x + "px"; p.style.top = y + "px";
       document.body.appendChild(p); setTimeout(() => p.remove(), 1200);
     }
-
-    // Helper Functions
-    function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
     function updateUI() {
       if (!pet) return;
       const s = pet.stats;
@@ -199,13 +172,13 @@
     async function save() { await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: Date.now() }); updateUI(); }
     function checkGrowth() { if (pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); } }
     
-    // Actions
     function feedPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 20); spawnEffect(foodMap[pet.species], window.innerWidth/2, window.innerHeight/2); save(); }
     function cleanPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 10); spawnEffect("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
     function playPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.energy = Math.max(0, pet.stats.energy - 15); spawnEffect("⚽️", window.innerWidth/2, window.innerHeight/2); save(); }
     function doctorPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
+    function resurrectPet() { pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
     function toggleSleep() { isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
-    
+
     async function createPet() {
       const n = document.getElementById("petName").value;
       const s = document.getElementById("petSpecies").value;
