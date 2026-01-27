@@ -10,7 +10,7 @@ body {
     padding: 0;
     background: #0a0a0a url('bg_wp.jpg') no-repeat center center fixed;
     background-size: cover;
-    font-family: 'Press Start 2P', cursive, monospace;
+    font-family: Arial, Helvetica, sans-serif; /* Easier to read */
     color: #ff00ff;
     display: flex;
     flex-direction: column;
@@ -29,7 +29,7 @@ h1 {
 }
 
 p {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     margin: 0 0 30px 0;
     color: #ffffff;
     text-shadow: 0 0 5px #39ff14;
@@ -52,36 +52,6 @@ a.home-link {
 a.home-link:hover {
     transform: scale(1.1);
     box-shadow: 0 0 25px #ff00ff, 0 0 50px #39ff14;
-}
-
-/* Glitch Header */
-@keyframes glitch {
-    0% { clip: rect(42px, 9999px, 44px, 0); transform: skew(0.5deg); }
-    5% { clip: rect(12px, 9999px, 85px, 0); transform: skew(0.5deg); }
-    10% { clip: rect(72px, 9999px, 95px, 0); transform: skew(0.5deg); }
-    15% { clip: rect(20px, 9999px, 50px, 0); transform: skew(0.5deg); }
-    20% { clip: rect(50px, 9999px, 80px, 0); transform: skew(0.5deg); }
-    100% { clip: rect(42px, 9999px, 44px, 0); transform: skew(0.5deg); }
-}
-
-h1.glitch {
-    position: relative;
-    color: #ff00ff;
-}
-h1.glitch::before, h1.glitch::after {
-    content: attr(data-text);
-    position: absolute;
-    left: 0;
-}
-h1.glitch::before {
-    animation: glitch 2s infinite linear alternate-reverse;
-    clip: rect(0, 900px, 0, 0);
-    color: #00ff41;
-}
-h1.glitch::after {
-    animation: glitch 1.5s infinite linear alternate-reverse;
-    clip: rect(0, 900px, 0, 0);
-    color: #ffcc00;
 }
 
 /* Casper Sprite */
