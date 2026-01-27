@@ -3,84 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 — Lost in Maximum Reality</title>
-<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<title>404 - Page Not Found</title>
 <style>
-  body {
+body {
     margin: 0;
-    padding: 0;
-    background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
-    background-size: cover;
-    font-family: 'Comic Neue', Arial, sans-serif;
-    color: #ff00ff;
+    height: 100vh;
+    background: #0b0b0b;
+    font-family: 'Arial', sans-serif;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    text-align: center;
     overflow: hidden;
-  }
-
-  h1 {
-    font-size: 5rem;
-    margin: 0;
-    text-shadow: 0 0 8px #ff00ff, 0 0 20px #ff00ff;
-    animation: glitch 1.5s infinite;
-  }
-
-  p {
-    font-size: 1.2rem;
     color: #fff;
-    text-shadow: 0 0 8px #ff00ff;
-    margin: 15px 0 30px 0;
-  }
+}
 
-  a.home-btn {
-    display: inline-block;
-    padding: 12px 25px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #1a1a1a;
+.glitch {
+    font-size: 3rem;
+    position: relative;
+    color: #ff00ff;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #39ff14;
+    animation: flicker 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+    content: '404';
+    position: absolute;
+    left: 0;
+}
+
+.glitch::before {
+    text-shadow: 2px 0 #00fff7;
+    clip: rect(0,900px,0,0);
+    animation: glitchTop 2s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+    text-shadow: -2px 0 #ffea00;
+    clip: rect(0,900px,0,0);
+    animation: glitchBottom 2s infinite linear alternate-reverse;
+}
+
+@keyframes flicker {
+    0%,19%,21%,23%,25%,54%,56%,100% {opacity: 1;}
+    20%,22%,24%,55% {opacity: 0.4;}
+}
+
+@keyframes glitchTop {
+    0% {clip: rect(0, 9999px, 0, 0);}
+    10% {clip: rect(0, 9999px, 25px, 0);}
+    20% {clip: rect(5px, 9999px, 30px, 0);}
+    30% {clip: rect(0, 9999px, 10px, 0);}
+    40% {clip: rect(10px, 9999px, 35px, 0);}
+    50% {clip: rect(0, 9999px, 25px, 0);}
+    60% {clip: rect(15px, 9999px, 40px, 0);}
+    70% {clip: rect(0, 9999px, 20px, 0);}
+    80% {clip: rect(5px, 9999px, 30px, 0);}
+    90% {clip: rect(0, 9999px, 25px, 0);}
+    100% {clip: rect(0, 9999px, 0, 0);}
+}
+
+@keyframes glitchBottom {
+    0% {clip: rect(0, 9999px, 0, 0);}
+    10% {clip: rect(15px, 9999px, 40px, 0);}
+    20% {clip: rect(5px, 9999px, 30px, 0);}
+    30% {clip: rect(0, 9999px, 20px, 0);}
+    40% {clip: rect(10px, 9999px, 35px, 0);}
+    50% {clip: rect(0, 9999px, 25px, 0);}
+    60% {clip: rect(5px, 9999px, 30px, 0);}
+    70% {clip: rect(0, 9999px, 10px, 0);}
+    80% {clip: rect(15px, 9999px, 40px, 0);}
+    90% {clip: rect(0, 9999px, 25px, 0);}
+    100% {clip: rect(0, 9999px, 0, 0);}
+}
+
+/* Subtitle */
+.subtitle {
+    margin-top: 20px;
+    color: #39ff14;
+    font-size: 1.2rem;
+    text-shadow: 0 0 8px #39ff14;
+    animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+    from { text-shadow: 0 0 8px #39ff14; }
+    to { text-shadow: 0 0 20px #39ff14; }
+}
+
+/* Casper Sprite */
+#casper {
+    position: absolute;
+    bottom: 10px;
+    left: -120px; /* start off screen */
+    width: 120px;
+    filter: drop-shadow(0 0 10px #ff00ff) drop-shadow(0 0 5px #39ff14);
+    animation: casperWalk 6s linear infinite alternate;
+}
+
+@keyframes casperWalk {
+    0% { left: -120px; transform: scaleX(1); }
+    50% { left: calc(100% - 120px); transform: scaleX(1); }
+    51% { transform: scaleX(-1); } /* turn him around */
+    100% { left: 0; transform: scaleX(-1); }
+}
+
+a.home-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
     background: #ff00ff;
-    border-radius: 25px;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-weight: bold;
     text-decoration: none;
-    box-shadow: 0 0 15px #ff00ff;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  a.home-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 30px #ff00ff;
-  }
-
-  /* Casper the Bulldog sprite */
-  .dog-sprite {
-    width: 200px; /* keep him reasonable size */
-    height: auto;
-    margin-top: 30px;
-    filter: drop-shadow(0 0 15px #39ff14);
-    animation: float 3s ease-in-out infinite;
-  }
-
-  /* Animations */
-  @keyframes glitch {
-    0% { text-shadow: 2px 2px #ff00ff, -2px -2px #00ff41; }
-    25% { text-shadow: -2px 2px #00ff41, 2px -2px #ff00ff; }
-    50% { text-shadow: 2px -2px #ff00ff, -2px 2px #00ff41; }
-    75% { text-shadow: -2px -2px #00ff41, 2px 2px #ff00ff; }
-    100% { text-shadow: 2px 2px #ff00ff, -2px -2px #00ff41; }
-  }
-
-  @keyframes float {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
+    box-shadow: 0 0 12px #ff00ff;
+    transition: all 0.2s ease;
+}
+a.home-btn:hover {
+    background: #39ff14;
+    color: #000;
+    box-shadow: 0 0 20px #39ff14;
+}
 </style>
 </head>
 <body>
-  <h1>404</h1>
-  <p>Uh oh! Looks like you've wandered off the map in Maximum Reality.</p>
-  <a href="https://maximumreality.github.io/pets/" class="home-btn">🏠 Return Home</a>
-  <img src="dog.png" alt="Casper the French Bulldog" class="dog-sprite">
+<div style="text-align:center;">
+    <div class="glitch">404</div>
+    <div class="subtitle">Oops! The page you are looking for wandered off...</div>
+</div>
+
+<img src="https://maximumreality.github.io/pets/dog.png" id="casper" alt="Casper the French Bulldog">
+
+<a href="https://maximumreality.xyz/" class="home-btn">🏠 Home</a>
 </body>
 </html>
