@@ -258,7 +258,7 @@ function toggleSleep(e) {
     function playPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.energy = Math.max(0, pet.stats.energy - 15); spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2); save(); }
     function doctorPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
     function resurrectPet(e) { e.stopPropagation(); pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
-    function toggleSleep(e) { e.stopPropagation(); isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
+    
 
     function spawnPop(txt, x, y) {
       const p = document.createElement("div"); p.className = "pop"; p.innerText = txt;
