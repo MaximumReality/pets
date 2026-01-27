@@ -38,7 +38,7 @@ html, body {
   background:var(--glass); padding:10px 18px; border-radius:30px; backdrop-filter:blur(15px);
   border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; gap:15px;
 }
-#statsBox { display:flex; gap:12px; font-size:12px; font-weight:bold; white-space: nowrap; }
+#statsBox { display:flex; gap:12px; font-size:12px; font-weight:bold; white-space: nowrap; transition: 0.3s; }
 .gear-btn { background:none; border:none; font-size:22px; cursor:pointer; padding:0; }
 
 .audio-controls {
@@ -47,22 +47,33 @@ html, body {
 }
 .audio-controls button { background:none; border:none; color:white; font-size: 18px; }
 
+/* TABBED MENU */
 #createMenu {
-  display:none; background:var(--glass); padding:20px; border-radius:20px;
-  width:220px; box-shadow:0 10px 40px rgba(0,0,0,0.9); border:1px solid var(--gold);
+  display:none; background:var(--glass); border-radius:20px;
+  width:280px; box-shadow:0 10px 40px rgba(0,0,0,0.9); border:1px solid var(--gold);
+  z-index: 10002; overflow: hidden;
 }
-#createMenu input, #createMenu select { width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:none; font-size: 16px; }
+.menu-tabs { display: flex; background: rgba(255,255,255,0.1); }
+.tab-btn { 
+  flex: 1; padding: 12px; border: none; background: none; color: white; 
+  font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;
+}
+.tab-btn.active { border-bottom: 2px solid var(--gold); color: var(--gold); }
+.menu-content { padding: 20px; max-height: 300px; overflow-y: auto; }
+.help-item { margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
+.help-item b { color: var(--gold); }
 
-/* PET & ANIMATIONS */
+#createMenu input, #createMenu select { 
+  width:100%; margin-bottom:10px; padding:10px; border-radius:8px; 
+  border:none; font-size: 16px; background: #333; color: white;
+}
+
+/* PET & EFFECTS */
 .pet-img { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor:pointer; }
 .wander { animation:wander 14s linear infinite alternate; }
 @keyframes wander { 0%{transform:translate(-60px,0);} 100%{transform:translate(60px,0);} }
-
-.hud-star {
-  position: absolute; pointer-events: none; font-size: 14px; 
-  animation: starTwinkle 2.5s ease-in-out infinite alternate; opacity: 0;
-}
-@keyframes starTwinkle { 0% { transform: scale(0.6); opacity: 0.2; } 100% { transform: scale(1.3); opacity: 1; } }
+.rain-drop { position:absolute; background:#4fa1ff; width:2px; height:15px; opacity:0.6; animation:rainFall 0.8s linear infinite; }
+@keyframes rainFall { 0%{transform:translateY(-100px);} 100%{transform:translateY(100vh);} }
 
 .action-bar {
   position:absolute; bottom:calc(var(--safe-bottom) + 20px); left:50%; transform:translateX(-50%);
@@ -70,18 +81,11 @@ html, body {
   backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1);
 }
 .action-bar button { background:#2a2a2a; border:1px solid #444; color:white; border-radius:50%; width:56px; height:56px; font-size:28px; }
-
 .pop { position:absolute; font-size:35px; animation:popUp 1.2s forwards; z-index:10001; pointer-events:none; }
 @keyframes popUp { 0%{opacity:1;} 100%{transform:translateY(-100px); opacity:0;} }
-
-.night-mode {
-  background-image: linear-gradient(rgba(0,0,50,0.6), rgba(0,0,50,0.6)), url('bg_wp.jpg') !important;
-  filter: brightness(0.7) saturate(0.9);
-}
+.night-mode { background-image: linear-gradient(rgba(0,0,50,0.6), rgba(0,0,50,0.6)), url('bg_wp.jpg') !important; filter: brightness(0.7); }
 .saving { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 .mess { position:absolute; font-size:28px; z-index:6; cursor:pointer; }
-.rain-drop { position:absolute; background:#4fa1ff; width:2px; height:15px; opacity:0.6; animation:rainFall 0.8s linear infinite; }
-@keyframes rainFall { 0%{transform:translateY(-100px);} 100%{transform:translateY(100vh);} }
 </style>
 </head>
 <body onclick="handlePetting(event)">
@@ -106,14 +110,26 @@ html, body {
   </div>
 
   <div id="createMenu">
-    <input id="petName" placeholder="Pet Name">
-    <select id="petSpecies">
-      <option value="bunny">Bunny</option><option value="fox">Fox</option>
-      <option value="dog">Dog</option><option value="dragon">Dragon</option>
-      <option value="cat">Cat</option><option value="unicorn">Unicorn</option>
-      <option value="frog">Frog</option>
-    </select>
-    <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:12px; border-radius:10px; font-weight:bold; color:black;">ADOPT</button>
+    <div class="menu-tabs">
+      <button class="tab-btn active" onclick="switchTab('help')">Manual</button>
+      <button class="tab-btn" onclick="switchTab('adopt')">Adopt</button>
+    </div>
+    <div id="helpTab" class="menu-content">
+      <div class="help-item"><b>H (Hunger):</b> Refill with (🍎). Keep it low! If >90%, HP drops.</div>
+      <div class="help-item"><b>E (Energy):</b> Refill with (🌙). Playing (⚽️) uses energy.</div>
+      <div class="help-item"><b>HP (Health):</b> Keep above 0! Heal with (🩺) and clean 💩 with (🧽).</div>
+      <div class="help-item"><b>XP:</b> Pet your pet or play to Level Up!</div>
+    </div>
+    <div id="adoptTab" class="menu-content" style="display:none;">
+      <input id="petName" placeholder="Pet Name">
+      <select id="petSpecies">
+        <option value="bunny">Bunny</option><option value="fox">Fox</option>
+        <option value="dog">Dog</option><option value="dragon">Dragon</option>
+        <option value="cat">Cat</option><option value="unicorn">Unicorn</option>
+        <option value="frog">Frog</option>
+      </select>
+      <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:12px; border-radius:10px; font-weight:bold; color:black;">ADOPT</button>
+    </div>
   </div>
 </div>
 
@@ -138,92 +154,63 @@ const db = firebase.firestore();
 
 let pet=null, isSleeping=false, isRaining=false;
 let audioCtx, musicGain, rainGain, musicBuffer, rainBuffer, musicSource, rainSource;
-const foodMap={bunny:"🥕",fox:"🍔",dog:"🥩",dragon:"🍖",cat:"🐠",unicorn:"🍎",frog:"🪰"};
-const reactMap={bunny:"🐰",fox:"🦊",dog:"🐕",cat:"😼",frog:"🐸",dragon:"🔥",unicorn:"✨"};
-const petPositions={frog:{left:"25%",bottom:"25%"},bunny:{left:"65%",bottom:"28%"},fox:{left:"55%",bottom:"30%"},dog:{left:"50%",bottom:"32%"},cat:{left:"45%",bottom:"34%"},unicorn:{left:"70%",bottom:"36%"},dragon:{left:"50%",bottom:"60%"}};
+
+// --- MENU LOGIC ---
+function toggleMenu(e){ 
+  e.stopPropagation(); 
+  const m = document.getElementById('createMenu'); 
+  m.style.display = (m.style.display === 'block') ? 'none' : 'block'; 
+  switchTab('help');
+}
+
+function switchTab(tab) {
+  const help = document.getElementById('helpTab');
+  const adopt = document.getElementById('adoptTab');
+  const btns = document.querySelectorAll('.tab-btn');
+  if (tab === 'help') {
+    help.style.display = 'block'; adopt.style.display = 'none';
+    btns[0].classList.add('active'); btns[1].classList.remove('active');
+  } else {
+    help.style.display = 'none'; adopt.style.display = 'block';
+    btns[1].classList.add('active'); btns[0].classList.remove('active');
+  }
+}
 
 // --- AUDIO ENGINE ---
 async function loadSound(url) {
   try {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    return await audioCtx.decodeAudioData(arrayBuffer);
-  } catch(e) { console.log("Sound load failed: " + url); return null; }
+    const res = await fetch(url);
+    const ab = await res.arrayBuffer();
+    return await audioCtx.decodeAudioData(ab);
+  } catch(e) { return null; }
 }
 
 async function initAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  musicGain = audioCtx.createGain();
-  rainGain = audioCtx.createGain();
-  musicGain.connect(audioCtx.destination);
-  rainGain.connect(audioCtx.destination);
-  
+  musicGain = audioCtx.createGain(); rainGain = audioCtx.createGain();
+  musicGain.connect(audioCtx.destination); rainGain.connect(audioCtx.destination);
   musicBuffer = await loadSound('happy-day.mp3');
   rainBuffer = await loadSound('rain-thunder.mp3');
-  
   if (musicBuffer) {
-    musicSource = audioCtx.createBufferSource();
-    musicSource.buffer = musicBuffer;
-    musicSource.loop = true;
-    musicSource.connect(musicGain);
-    musicSource.start(0);
+    musicSource = audioCtx.createBufferSource(); musicSource.buffer = musicBuffer;
+    musicSource.loop = true; musicSource.connect(musicGain); musicSource.start(0);
     musicGain.gain.value = 0.4;
   }
-  
   if (rainBuffer) {
-    rainSource = audioCtx.createBufferSource();
-    rainSource.buffer = rainBuffer;
-    rainSource.loop = true;
-    rainSource.connect(rainGain);
-    rainSource.start(0);
+    rainSource = audioCtx.createBufferSource(); rainSource.buffer = rainBuffer;
+    rainSource.loop = true; rainSource.connect(rainGain); rainSource.start(0);
     rainGain.gain.value = 0;
   }
 }
 
 function setVol(val, e) {
   if (e) e.stopPropagation();
-  if (!audioCtx) {
-    initAudio().then(() => { if(audioCtx.state === 'suspended') audioCtx.resume(); });
-  } else {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    musicGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2);
-  }
+  if (!audioCtx) initAudio().then(() => { if(audioCtx.state==='suspended') audioCtx.resume(); });
+  else { if(audioCtx.state==='suspended') audioCtx.resume(); musicGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2); }
 }
 
-// --- WEATHER & HEARTBEAT ---
-function toggleWeather() {
-  const layer = document.getElementById('weather-layer');
-  layer.innerHTML = '';
-  isRaining = Math.random() < 0.4; 
-  if (isRaining) {
-    if (rainGain) rainGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 2);
-    for (let i = 0; i < 30; i++) {
-      const drop = document.createElement('div');
-      drop.className = 'rain-drop';
-      drop.style.left = Math.random() * 100 + '%';
-      drop.style.animationDelay = Math.random() * 2 + 's';
-      layer.appendChild(drop);
-    }
-    triggerLightning();
-    spawnPop("⛈️", window.innerWidth/2, 100);
-  } else {
-    if (rainGain) rainGain.gain.setTargetAtTime(0, audioCtx.currentTime, 2);
-  }
-}
-
-function triggerLightning() {
-  if (!isRaining) return;
-  setTimeout(() => {
-    if (isRaining) {
-      document.body.classList.add('flash');
-      setTimeout(() => document.body.classList.remove('flash'), 150);
-      triggerLightning();
-    }
-  }, Math.random() * 8000 + 3000);
-}
-setInterval(toggleWeather, 45000);
-
+// --- HEARTBEAT & STATS ---
 function gameHeartbeat() {
   if (!pet || pet.stats.health <= 0) return;
   if (isSleeping) {
@@ -239,7 +226,6 @@ function gameHeartbeat() {
 }
 setInterval(gameHeartbeat, 5000);
 
-// --- REST OF ACTIONS ---
 async function save(){ 
   if(pet && pet.id) {
     document.getElementById('statsBox').classList.add('saving');
@@ -258,28 +244,30 @@ function updateUI(){
   document.getElementById("resBtn").style.display = (s.health <= 0) ? "block" : "none";
 }
 
-function feedPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); spawnPop(foodMap[pet.species] || "🍎", window.innerWidth/2, window.innerHeight/2); save(); }
+// --- ACTIONS ---
+function feedPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); spawnPop("🍎", window.innerWidth/2, window.innerHeight/2); save(); }
 function playPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; if(pet.stats.energy < 15) { spawnPop("💤", window.innerWidth/2, 200); return; } pet.stats.energy = Math.max(0, pet.stats.energy - 10); pet.stats.xp += 30; spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2); checkLevelUp(); save(); }
 function cleanPet(e){ e.stopPropagation(); if(!pet || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 15); document.getElementById('messes').innerHTML = ''; spawnPop("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
 function doctorPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 30); spawnPop("🩺", window.innerWidth/2, window.innerHeight/2); save(); }
-async function resurrectPet(e){ e.stopPropagation(); if(!pet || pet.stats.health > 0) return; pet.stats.health = 50; pet.stats.hunger = 50; pet.stats.energy = 50; save(); display(pet); }
+function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 5; spawnPop("💕", e.clientX, e.clientY); checkLevelUp(); save(); } }
 
 function checkLevelUp() {
   if(!pet) return;
-  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; spawnPop("✨ LEVEL UP!", window.innerWidth/2, 150); }
+  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; spawnPop("✨ LEVEL UP!", window.innerWidth/2, 150); display(pet); }
 }
 
-function toggleSleep(e){ e.stopPropagation(); isSleeping = !isSleeping; document.body.classList.toggle('night-mode', isSleeping); isSleeping ? spawnStars() : removeStars(); save(); }
-function spawnStars() {
-  const field = document.getElementById('star-field');
-  field.innerHTML = '';
-  for (let i = 0; i < 20; i++) {
-    const star = document.createElement('div'); star.className = 'hud-star';
-    star.innerText = '✨'; star.style.top = Math.random() * 50 + '%'; star.style.left = Math.random() * 100 + '%';
-    field.appendChild(star);
-  }
+function toggleSleep(e){ e.stopPropagation(); isSleeping = !isSleeping; document.body.classList.toggle('night-mode', isSleeping); save(); }
+
+function display(data){
+  pet=data; const world=document.getElementById("game-world");
+  const isDead = pet.stats.health <= 0;
+  world.classList.toggle("wander", !isDead && !isSleeping);
+  world.style.left="50%"; world.style.bottom="32%";
+  world.innerHTML=`<img src="${pet.species}.png" class="pet-img" style="width:${80+(pet.stats.level*5)}px; opacity:${isDead?0.3:1}; filter:${isDead?'grayscale(1)':''}">`;
+  updateUI();
 }
-function removeStars() { document.getElementById('star-field').innerHTML = ''; }
+
+function spawnPop(txt,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=txt; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
 function spawnMess() {
   const container = document.getElementById('messes');
   const m = document.createElement('div'); m.className = 'mess'; m.innerText = '💩';
@@ -287,21 +275,6 @@ function spawnMess() {
   m.onclick = (e) => { e.stopPropagation(); m.remove(); pet.stats.health = Math.min(100, pet.stats.health + 2); save(); };
   container.appendChild(m);
 }
-
-function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 5; spawnPop(reactMap[pet.species]||"💕", e.clientX, e.clientY); checkLevelUp(); save(); } }
-
-function display(data){
-  pet=data; const world=document.getElementById("game-world");
-  const pos=petPositions[pet.species]||{left:"50%",bottom:"32%"};
-  world.style.left=pos.left; world.style.bottom=pos.bottom;
-  const isDead = pet.stats.health <= 0;
-  world.classList.toggle("wander", !isDead && !isSleeping);
-  world.innerHTML=`<img src="${pet.species}.png" class="pet-img" style="width:${80+(pet.stats.level*5)}px; opacity:${isDead?0.3:1}; filter:${isDead?'grayscale(1)':''}">`;
-  updateUI();
-}
-
-function spawnPop(txt,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=txt; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
-function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
 
 async function createPet(){
   const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
