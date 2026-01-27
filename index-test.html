@@ -173,37 +173,105 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-<script>
-// --- Config ---
+// --- Firebase Config ---
 const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// --- Game State ---
 let pet=null, isSleeping=false, isRaining=false;
-let audioCtx, audioBuffer, sourceNode, gainNode;
+let audioCtx, gainNode;
 const foodMap={bunny:"🥕",fox:"🍔",dog:"🥩",dragon:"🍖",cat:"🐠",unicorn:"🍎",frog:"🪰"};
 const reactMap={bunny:"🐰",fox:"🦊",dog:"🐕",cat:"😼",frog:"🐸",dragon:"🔥",unicorn:"✨"};
 const petPositions={frog:{left:"25%",bottom:"25%"},bunny:{left:"65%",bottom:"28%"},fox:{left:"55%",bottom:"30%"},dog:{left:"50%",bottom:"32%"},cat:{left:"45%",bottom:"34%"},unicorn:{left:"70%",bottom:"36%"},dragon:{left:"50%",bottom:"60%"}};
 
-// --- Logic ---
-async function initAudio(){
-  if(audioCtx) return;
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  gainNode=audioCtx.createGain(); gainNode.connect(audioCtx.destination);
-  const res=await fetch('happy-day.mp3'); 
-  const ab=await res.arrayBuffer();
-  audioBuffer=await audioCtx.decodeAudioData(ab);
-  sourceNode=audioCtx.createBufferSource(); sourceNode.buffer=audioBuffer; sourceNode.loop=true;
-  sourceNode.connect(gainNode); sourceNode.start(0);
+// --- The Heartbeat (Energy, Hunger, & Poop Spawn) ---
+function gameHeartbeat() {
+  if (!pet || pet.stats.health <= 0) return;
+
+  if (isSleeping) {
+    pet.stats.energy = Math.min(100, pet.stats.energy + 10);
+    pet.stats.health = Math.min(100, pet.stats.health + 2);
+  } else {
+    pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
+    pet.stats.energy = Math.max(0, pet.stats.energy - 1);
+    
+    // Logic for Poop & Flies
+    if (pet.stats.hunger > 70 || pet.stats.health < 50) {
+      if (Math.random() > 0.8) spawnMess();
+      showFlies(true);
+    } else {
+      showFlies(false);
+    }
+  }
+  save();
+}
+setInterval(gameHeartbeat, 5000);
+
+// --- Interactions ---
+function feedPet(e){
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  pet.stats.hunger = Math.max(0, pet.stats.hunger - 25);
+  spawnPop(foodMap[pet.species] || "🍎", window.innerWidth/2, window.innerHeight/2);
+  save();
 }
 
-function setVol(val,e){
-  e.stopPropagation(); 
-  if(!audioCtx){initAudio(); setTimeout(()=>{if(gainNode) gainNode.gain.value=val;},500); return;} 
-  if(audioCtx.state==='suspended') audioCtx.resume(); 
-  gainNode.gain.setTargetAtTime(val,audioCtx.currentTime,0.1);
+function playPet(e){
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  if(pet.stats.energy < 15) { spawnPop("💤 Tired", window.innerWidth/2, 200); return; }
+  pet.stats.energy = Math.max(0, pet.stats.energy - 15);
+  pet.stats.xp = (pet.stats.xp || 0) + 15;
+  spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2);
+  checkLevelUp();
+  save();
 }
 
+function cleanPet(e){
+  e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
+  pet.stats.health = Math.min(100, pet.stats.health + 15);
+  // Clear all poops and flies
+  document.getElementById('messes').innerHTML = '';
+  showFlies(false);
+  spawnPop("🫧🧹", window.innerWidth/2, window.innerHeight/2);
+  save();
+}
+
+function doctorPet(e){
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  pet.stats.health = Math.min(100, pet.stats.health + 30);
+  document.body.classList.add('flash'); setTimeout(()=>document.body.classList.remove('flash'),100);
+  spawnPop("🩺✨", window.innerWidth/2, window.innerHeight/2);
+  save();
+}
+
+// --- Environment Helpers ---
+function spawnMess(){
+  const m=document.createElement('div'); m.className='mess'; m.innerText='💩'; 
+  m.style.left=(Math.random()*60+20)+'%'; m.style.bottom='22%'; 
+  document.getElementById('messes').appendChild(m);
+}
+
+function showFlies(show) {
+  const world = document.getElementById("game-world");
+  document.querySelectorAll('.fly').forEach(f => f.remove());
+  if (show) {
+    for(let i=0; i<3; i++) {
+      const f = document.createElement('div'); f.className='fly'; f.innerText='🪰';
+      f.style.left=Math.random()*40+'px'; f.style.top=Math.random()*40+'px';
+      world.appendChild(f);
+    }
+  }
+}
+
+function checkLevelUp() {
+  if(pet.stats.xp >= 100) {
+    pet.stats.level++; pet.stats.xp = 0;
+    spawnPop("✨ LEVEL UP!", window.innerWidth/2, 100);
+    display(pet);
+  }
+}
+
+// --- Sleep & Stars ---
 function toggleSleep(e) {
   e.stopPropagation();
   isSleeping = !isSleeping;
@@ -216,11 +284,12 @@ function toggleSleep(e) {
 function spawnStars() {
   const hud = document.getElementById('hud-container');
   removeStars();
-  for (let i = 0; i < 15; i++) {
+  const starTypes = ['✨','🌟','⭐'];
+  for (let i = 0; i < 12; i++) {
     const star = document.createElement('div');
     star.className = 'hud-star';
-    star.innerText = ['✨','🌟','⭐'][Math.floor(Math.random()*3)];
-    star.style.top = (Math.random() * 100 - 20) + 'px';
+    star.innerText = starTypes[Math.floor(Math.random()*3)];
+    star.style.top = (Math.random() * 60 - 10) + 'px';
     star.style.left = (Math.random() * 100) + '%';
     star.style.animationDelay = (Math.random() * 2) + 's';
     hud.appendChild(star);
@@ -229,55 +298,48 @@ function spawnStars() {
 
 function removeStars() { document.querySelectorAll('.hud-star').forEach(s => s.remove()); }
 
+// --- Core Engine ---
 function display(data){
   pet=data;
   const world=document.getElementById("game-world");
   const pos=petPositions[pet.species]||{left:"50%",bottom:"32%"};
   world.style.left=pos.left; world.style.bottom=pos.bottom;
   const isDead = pet.stats.health <= 0;
-  world.classList.toggle("wander", !isDead);
+  world.classList.toggle("wander", !isDead && !isSleeping);
   world.innerHTML=`<img src="${pet.species}.png" class="pet-img ${isDead?'is-ghost':''}" style="width:${80+(pet.stats.level*5)}px">`;
   updateUI();
 }
 
-function handlePetting(e){
-  if(!pet || isSleeping || pet.stats.health <= 0) return;
-  if(e.target.classList.contains('pet-img')){
-    pet.stats.xp += 5;
-    spawnPop(reactMap[pet.species]||"💕", e.clientX, e.clientY);
-    if(pet.stats.xp>=100){ pet.stats.level++; pet.stats.xp=0; display(pet); }
-    save();
-  }
-}
-
-function feedPet(e){
-  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
-  pet.stats.hunger = Math.max(0, pet.stats.hunger - 20);
-  spawnPop(foodMap[pet.species], window.innerWidth/2, window.innerHeight/2); save();
-}
-
 function updateUI(){
   if(!pet) return;
-  document.getElementById("sn").innerHTML=`<b>${pet.name}</b>`;
+  document.getElementById("sn").innerHTML=`<b>${pet.name}</b> (Lv.${pet.stats.level})`;
   document.getElementById("sh").innerText=`H:${Math.round(pet.stats.hunger)}%`;
   document.getElementById("se").innerText=`E:${Math.round(pet.stats.energy)}%`;
   document.getElementById("shp").innerText=`HP:${Math.round(pet.stats.health)}%`;
   document.getElementById("resBtn").style.display=(pet.stats.health<=0)?"flex":"none";
 }
 
-function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
-async function save(){ if(pet && pet.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); updateUI(); }
-async function createPet(){
-  const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
-  const res=await db.collection("pets").add({name:n,species:s,lastUpdated:Date.now(),stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
-  display({id:res.id,name:n,species:s,stats:{hunger:50,energy:50,health:100,level:1,xp:0}}); 
-  document.getElementById('createMenu').style.display='none';
+function spawnPop(txt,x,y){
+  const p=document.createElement("div"); p.className="pop"; p.innerText=txt; 
+  p.style.left=(x-20)+"px"; p.style.top=(y-20)+"px"; 
+  document.body.appendChild(p); setTimeout(()=>p.remove(),1200);
 }
+
+function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
+function handlePetting(e){
+  if(!pet || isSleeping || pet.stats.health <= 0) return;
+  if(e.target.classList.contains('pet-img')){
+    pet.stats.xp = (pet.stats.xp || 0) + 5;
+    spawnPop(reactMap[pet.species]||"💕", e.clientX, e.clientY);
+    checkLevelUp(); save();
+  }
+}
+async function save(){ if(pet && pet.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); updateUI(); }
 async function fetchPet(){
   const snap=await db.collection("pets").orderBy("lastUpdated","desc").limit(1).get();
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
 fetchPet();
-</script>
+>
 </body>
 </html>
