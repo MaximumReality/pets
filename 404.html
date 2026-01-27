@@ -8,15 +8,18 @@
 body {
     margin: 0;
     height: 100vh;
-    background: #0b0b0b;
+    background: #0b0b0b url('bg_wp.jpg') no-repeat center center fixed;
+    background-size: cover;
     font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    color: #fff;
+    flex-direction: column;
 }
 
+/* Glitchy Text */
 .glitch {
     font-size: 3rem;
     position: relative;
@@ -45,38 +48,9 @@ body {
     animation: glitchBottom 2s infinite linear alternate-reverse;
 }
 
-@keyframes flicker {
-    0%,19%,21%,23%,25%,54%,56%,100% {opacity: 1;}
-    20%,22%,24%,55% {opacity: 0.4;}
-}
-
-@keyframes glitchTop {
-    0% {clip: rect(0, 9999px, 0, 0);}
-    10% {clip: rect(0, 9999px, 25px, 0);}
-    20% {clip: rect(5px, 9999px, 30px, 0);}
-    30% {clip: rect(0, 9999px, 10px, 0);}
-    40% {clip: rect(10px, 9999px, 35px, 0);}
-    50% {clip: rect(0, 9999px, 25px, 0);}
-    60% {clip: rect(15px, 9999px, 40px, 0);}
-    70% {clip: rect(0, 9999px, 20px, 0);}
-    80% {clip: rect(5px, 9999px, 30px, 0);}
-    90% {clip: rect(0, 9999px, 25px, 0);}
-    100% {clip: rect(0, 9999px, 0, 0);}
-}
-
-@keyframes glitchBottom {
-    0% {clip: rect(0, 9999px, 0, 0);}
-    10% {clip: rect(15px, 9999px, 40px, 0);}
-    20% {clip: rect(5px, 9999px, 30px, 0);}
-    30% {clip: rect(0, 9999px, 20px, 0);}
-    40% {clip: rect(10px, 9999px, 35px, 0);}
-    50% {clip: rect(0, 9999px, 25px, 0);}
-    60% {clip: rect(5px, 9999px, 30px, 0);}
-    70% {clip: rect(0, 9999px, 10px, 0);}
-    80% {clip: rect(15px, 9999px, 40px, 0);}
-    90% {clip: rect(0, 9999px, 25px, 0);}
-    100% {clip: rect(0, 9999px, 0, 0);}
-}
+@keyframes flicker {0%,19%,21%,23%,25%,54%,56%,100% {opacity:1;}20%,22%,24%,55%{opacity:0.4;}}
+@keyframes glitchTop {0% {clip: rect(0, 9999px, 0, 0);} 10% {clip: rect(0, 9999px, 25px, 0);} 20% {clip: rect(5px, 9999px, 30px, 0);} 30% {clip: rect(0, 9999px, 10px, 0);} 40% {clip: rect(10px, 9999px, 35px, 0);} 50% {clip: rect(0, 9999px, 25px, 0);} 60% {clip: rect(15px, 9999px, 40px, 0);} 70% {clip: rect(0, 9999px, 20px, 0);} 80% {clip: rect(5px, 9999px, 30px, 0);} 90% {clip: rect(0, 9999px, 25px, 0);} 100% {clip: rect(0, 9999px, 0, 0);}}
+@keyframes glitchBottom {0% {clip: rect(0, 9999px, 0, 0);} 10% {clip: rect(15px, 9999px, 40px, 0);} 20% {clip: rect(5px, 9999px, 30px, 0);} 30% {clip: rect(0, 9999px, 20px, 0);} 40% {clip: rect(10px, 9999px, 35px, 0);} 50% {clip: rect(0, 9999px, 25px, 0);} 60% {clip: rect(5px, 9999px, 30px, 0);} 70% {clip: rect(0, 9999px, 10px, 0);} 80% {clip: rect(15px, 9999px, 40px, 0);} 90% {clip: rect(0, 9999px, 25px, 0);} 100% {clip: rect(0, 9999px, 0, 0);}}
 
 /* Subtitle */
 .subtitle {
@@ -87,16 +61,13 @@ body {
     animation: pulse 2s infinite alternate;
 }
 
-@keyframes pulse {
-    from { text-shadow: 0 0 8px #39ff14; }
-    to { text-shadow: 0 0 20px #39ff14; }
-}
+@keyframes pulse { from {text-shadow:0 0 8px #39ff14;} to {text-shadow:0 0 20px #39ff14;} }
 
 /* Casper Sprite */
 #casper {
     position: absolute;
     bottom: 10px;
-    left: -120px; /* start off screen */
+    left: -120px;
     width: 120px;
     filter: drop-shadow(0 0 10px #ff00ff) drop-shadow(0 0 5px #39ff14);
     animation: casperWalk 6s linear infinite alternate;
@@ -105,10 +76,11 @@ body {
 @keyframes casperWalk {
     0% { left: -120px; transform: scaleX(1); }
     50% { left: calc(100% - 120px); transform: scaleX(1); }
-    51% { transform: scaleX(-1); } /* turn him around */
+    51% { transform: scaleX(-1); }
     100% { left: 0; transform: scaleX(-1); }
 }
 
+/* Home Button */
 a.home-btn {
     position: absolute;
     bottom: 20px;
@@ -130,7 +102,7 @@ a.home-btn:hover {
 </style>
 </head>
 <body>
-<div style="text-align:center;">
+<div style="text-align:center; z-index:1;">
     <div class="glitch">404</div>
     <div class="subtitle">Oops! The page you are looking for wandered off...</div>
 </div>
