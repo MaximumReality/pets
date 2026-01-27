@@ -1,0 +1,16 @@
+{
+  "name": "Luna & Stella Pets",
+  "short_name": "L&S Pets",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#ffcc00",
+  "icons": [
+    {
+      "src": "bg_wp.JPG",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
