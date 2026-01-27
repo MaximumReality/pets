@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Reality Pets: Final Fix</title>
+  <title>Reality Pets: Pro Max Edition</title>
   <style>
     :root { 
       --glass: rgba(0, 0, 0, 0.85); 
       --gold: #ffcc00;
-      --safe-top: env(safe-area-inset-top, 50px); 
+      /* Massive buffer for the Pro Max Island */
+      --safe-top: env(safe-area-inset-top, 59px); 
     }
     
     body {
@@ -16,69 +17,92 @@
       background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
       background-size: cover; color: #fff; overflow: hidden; height: 100vh;
       -webkit-user-select: none; user-select: none;
+      position: fixed; width: 100%;
     }
 
-    /* Stats - Pushed down to clear Dynamic Island */
+    /* Centered Stat Capsule - Pushed BELOW the Island */
     #statsBox {
-      position: absolute; top: calc(var(--safe-top) + 10px); right: 15px;
-      background: var(--glass); padding: 10px; border-radius: 15px;
-      font-size: 11px; backdrop-filter: blur(10px); z-index: 1000;
-      border: 1px solid rgba(255,255,255,0.1); width: 130px;
+      position: absolute; 
+      top: calc(var(--safe-top) + 20px); 
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--glass); 
+      padding: 10px 20px; 
+      border-radius: 25px;
+      font-size: 10px; 
+      backdrop-filter: blur(15px); 
+      z-index: 9999;
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      gap: 15px;
+      white-space: nowrap;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .menu-wrap { 
-      position: absolute; top: calc(var(--safe-top) + 10px); left: 15px; 
-      z-index: 1000;
+      position: absolute; 
+      top: calc(var(--safe-top) + 20px); 
+      left: 20px; 
+      z-index: 10000;
     }
 
-    /* Action Bar - Solid Z-Index and Flex */
+    /* Action Bar */
     .action-bar {
-      position: absolute; bottom: env(safe-area-inset-bottom, 30px);
-      left: 50%; transform: translateX(-50%);
-      display: flex; gap: 12px; z-index: 1000;
-      background: rgba(0,0,0,0.6); padding: 12px; border-radius: 30px;
-      backdrop-filter: blur(15px);
+      position: absolute; 
+      bottom: env(safe-area-inset-bottom, 40px);
+      left: 50%; 
+      transform: translateX(-50%);
+      display: flex; 
+      gap: 12px; 
+      z-index: 9999;
+      background: rgba(0,0,0,0.7); 
+      padding: 12px 20px; 
+      border-radius: 35px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
     }
 
     .action-bar button {
-      background: #333; border: 1px solid #555;
-      color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 24px;
+      background: #222; border: 1px solid #444;
+      color: white; border-radius: 50%; width: 54px; height: 54px; font-size: 26px;
       display: flex; align-items: center; justify-content: center;
+      transition: transform 0.1s;
     }
+    .action-bar button:active { transform: scale(0.9); }
 
     /* Pet Logic */
-    #game-world { position: absolute; z-index: 5; transition: all 0.8s ease; }
+    #game-world { position: absolute; z-index: 10; transition: all 0.8s ease; }
     .pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
     
     .wander { animation: wander 14s linear infinite alternate; }
-    @keyframes wander { 0% { transform: translate(-80px, 0); } 100% { transform: translate(80px, 0); } }
+    @keyframes wander { 0% { transform: translate(-60px, 0); } 100% { transform: translate(60px, 0); } }
     
     .react { animation: react 0.4s ease-out; }
-    @keyframes react { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    @keyframes react { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
     
     .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 15px cyan) !important; }
 
-    /* Falling Food Animation */
+    /* Falling Food */
     .food-drop {
-      position: absolute; font-size: 40px; z-index: 100;
+      position: absolute; font-size: 45px; z-index: 50;
       animation: fall 1.5s ease-in forwards;
     }
     @keyframes fall {
       0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(600px) rotate(360deg); opacity: 0; }
+      100% { transform: translateY(800px) rotate(360deg); opacity: 0; }
     }
 
-    .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 2000; pointer-events: none; }
-    @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+    .pop { position: absolute; font-size: 40px; animation: popUp 1.2s forwards; z-index: 10001; pointer-events: none; }
+    @keyframes popUp { 0% { opacity: 1; transform: scale(0.5); } 100% { transform: translateY(-120px) scale(1.2); opacity: 0; } }
   </style>
 </head>
 <body onclick="handlePetting(event)">
 
   <div class="menu-wrap">
-    <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; width:44px; height:44px; font-size:20px;">⚙️</button>
-    <div id="createMenu" style="display:none; background:var(--glass); padding:15px; border-radius:15px; margin-top:10px; width:160px;">
-      <input id="petName" placeholder="Name" style="width:90%; margin-bottom:5px; padding:5px;">
-      <select id="petSpecies" style="width:98%; margin-bottom:5px; padding:5px;">
+    <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; width:48px; height:48px; font-size:22px;">⚙️</button>
+    <div id="createMenu" style="display:none; background:var(--glass); padding:20px; border-radius:20px; margin-top:10px; width:180px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <input id="petName" placeholder="Name" style="width:90%; margin-bottom:10px; padding:8px; border-radius:5px; border:none;">
+      <select id="petSpecies" style="width:100%; margin-bottom:10px; padding:8px; border-radius:5px;">
         <option value="bunny">Bunny (🥕)</option>
         <option value="fox">Fox (🍔)</option>
         <option value="dog">Dog (🥩)</option>
@@ -87,16 +111,15 @@
         <option value="unicorn">Unicorn (🍎)</option>
         <option value="frog">Frog (🪰)</option>
       </select>
-      <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold;">ADOPT</button>
+      <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:12px; border-radius:10px; font-weight:bold; color:black;">ADOPT PET</button>
     </div>
   </div>
 
   <div id="statsBox">
-    <div id="sn"><b>Adopt a Pet!</b></div>
+    <div id="sn"><b>—</b></div>
     <div id="sh">Hunger: —</div>
     <div id="se">Energy: —</div>
-    <div id="shp">Health: —</div>
-    <div id="sl">Level: —</div>
+    <div id="shp">HP: —</div>
   </div>
 
   <div id="game-world"></div>
@@ -106,7 +129,7 @@
     <button onclick="cleanPet(event)">🧽</button>
     <button onclick="playPet(event)">⚽️</button>
     <button onclick="doctorPet(event)">🩺</button>
-    <button id="resBtn" onclick="resurrectPet(event)" style="display:none; background:var(--gold);">⚡️</button>
+    <button id="resBtn" onclick="resurrectPet(event)" style="display:none; background:var(--gold); color:black;">⚡️</button>
     <button onclick="toggleSleep(event)">🌙</button>
   </div>
 
@@ -122,7 +145,7 @@
     let isSleeping = false;
     const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎", frog:"🪰" };
     const reactMap = { bunny: "🐰", fox: "🦊", dog: "🐕", cat: "😼", frog: "🐸", dragon: "🔥", unicorn: "✨" };
-    const petPositions = { frog: { left: "25%", bottom: "18%" }, bunny: { left: "65%", bottom: "20%" }, fox: { left: "55%", bottom: "22%" }, dog: { left: "50%", bottom: "25%" }, cat: { left: "45%", bottom: "26%" }, unicorn: { left: "70%", bottom: "28%" }, dragon: { left: "50%", bottom: "55%" } };
+    const petPositions = { frog: { left: "25%", bottom: "22%" }, bunny: { left: "65%", bottom: "24%" }, fox: { left: "55%", bottom: "26%" }, dog: { left: "50%", bottom: "28%" }, cat: { left: "45%", bottom: "30%" }, unicorn: { left: "70%", bottom: "32%" }, dragon: { left: "50%", bottom: "55%" } };
     const roamingPets = ["bunny", "fox", "dog", "cat"];
 
     function display(data) {
@@ -130,7 +153,7 @@
       const world = document.getElementById("game-world");
       const isDead = pet.stats.health <= 0;
       const size = 80 + (pet.stats.level * 5);
-      const pos = petPositions[pet.species] || { left:"50%", bottom:"28%" };
+      const pos = petPositions[pet.species] || { left:"50%", bottom:"30%" };
 
       world.style.left = pos.left;
       world.style.bottom = pos.bottom;
@@ -154,7 +177,6 @@
       e.stopPropagation(); 
       if(!pet || isSleeping || pet.stats.health <= 0) return; 
       pet.stats.hunger = Math.max(0, pet.stats.hunger - 20); 
-      // Drop food from top
       const food = document.createElement("div");
       food.className = "food-drop";
       food.innerText = foodMap[pet.species];
@@ -169,23 +191,24 @@
     function doctorPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
     function resurrectPet(e) { e.stopPropagation(); pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
     function toggleSleep(e) { e.stopPropagation(); isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
-
     function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+
     function spawnPop(txt, x, y) {
       const p = document.createElement("div"); p.className = "pop"; p.innerText = txt;
-      p.style.left = x + "px"; p.style.top = y + "px";
+      p.style.left = (x - 20) + "px"; p.style.top = (y - 20) + "px";
       document.body.appendChild(p); setTimeout(() => p.remove(), 1200);
     }
+
     function updateUI() {
       if (!pet) return;
       const s = pet.stats;
-      document.getElementById("sn").innerHTML = `<b>${s.health <= 0 ? '👻' : ''} ${pet.name} (Lv.${s.level})</b>`;
+      document.getElementById("sn").innerHTML = `<b>${s.health <= 0 ? '👻' : ''} ${pet.name}</b>`;
       document.getElementById("sh").innerText = `Hunger: ${Math.round(s.hunger)}%`;
       document.getElementById("se").innerText = `Energy: ${Math.round(s.energy)}%`;
-      document.getElementById("shp").innerText = `Health: ${Math.round(s.health)}%`;
-      document.getElementById("sl").innerText = `XP: ${s.xp}/100`;
+      document.getElementById("shp").innerText = `HP: ${Math.round(s.health)}%`;
     }
-    async function save() { await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: Date.now() }); updateUI(); }
+
+    async function save() { if(pet.id) await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: Date.now() }); updateUI(); }
     function checkGrowth() { if (pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); } }
     
     async function createPet() {
