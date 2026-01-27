@@ -150,6 +150,26 @@ body.is-stormy { filter: brightness(0.7) contrast(1.1) saturate(0.9); }
 @keyframes fall { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(150px); opacity: 0; } }
 
 select, input { width: 100%; background: #333; color: white; border: 1px solid #555; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 16px; }
+
+.home-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px; /* keeps it in the top-right corner */
+  z-index: 2000;
+  background: rgba(255, 204, 0, 0.8); /* gold instead of pink */
+  color: #000; /* black text for contrast */
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.home-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255, 204, 0, 1); /* hover glow */
+}
 </style>
 </head>
 <body onclick="handlePetting(event)">
