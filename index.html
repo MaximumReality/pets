@@ -1,242 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Maximum Reality Pets</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: url('bg_wp.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-      overflow: hidden;
-      position: relative;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<title>Maximum Reality Pets</title>
+<style>
+  body { 
+    margin: 0;
+    font-family: sans-serif; 
+    background: url('bg_wp.jpg') no-repeat center center fixed;
+    background-size: cover;
+    overflow: hidden;
+    color: #fff;
+  }
 
-    h1 {
-      text-align: center;
-      text-shadow: 2px 2px 4px #000;
-      margin-top: 10px;
-    }
+  .pet {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    image-rendering: pixelated;
+    transition: transform 0.5s;
+    filter: drop-shadow(0 0 15px #fff);
+  }
 
-    .stats-box {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: rgba(0,0,0,0.6);
-      padding: 10px;
-      border-radius: 10px;
-      min-width: 140px;
-    }
+  #statsBox {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 10px;
+    border-radius: 10px;
+    width: 150px;
+  }
 
-    .pet {
-      position: absolute;
-      width: 80px;
-      height: 80px;
-      image-rendering: pixelated;
-      transition: transform 0.5s ease;
-      cursor: pointer;
-      z-index: 3;
-    }
+  #callBar {
+    position: fixed;
+    bottom: 180px; /* above stats box */
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
 
-    .food {
-      position: absolute;
-      font-size: 32px;
-      animation: floatUp 1s forwards;
-      z-index: 4;
-    }
+  button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ffcc00;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
 
-    @keyframes floatUp {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-50px); opacity: 0; }
-    }
+  .food {
+    position: absolute;
+    font-size: 40px;
+    pointer-events: none;
+    animation: floatUp 1s forwards;
+  }
 
-    .controls {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0,0,0,0.5);
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .controls input, .controls select, .controls button {
-      margin: 5px 2px;
-      padding: 5px 8px;
-      border-radius: 5px;
-      border: none;
-      font-size: 14px;
-    }
-
-    .controls button {
-      background-color: #ffcc00;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-80px); opacity: 0; }
+  }
+</style>
 </head>
 <body>
-  <h1>🐾 Maximum Reality Pets</h1>
 
-  <div class="stats-box" id="statsBox">
-    <div id="statName">Name: —</div>
-    <div id="statSpecies">Species: —</div>
-    <div id="statHunger">Hunger: —</div>
-    <div id="statHappiness">Happiness: —</div>
-    <div id="statEnergy">Energy: —</div>
-    <div id="statHealth">Health: —</div>
-  </div>
+<div id="statsBox">
+  <div id="petName">Name: </div>
+  <div id="petSpecies">Species: </div>
+  <div id="petHunger">Hunger: </div>
+  <div id="petHappiness">Happiness: </div>
+  <div id="petEnergy">Energy: </div>
+  <div id="petHealth">Health: </div>
+</div>
 
-  <div class="controls">
-    <input id="petName" placeholder="Pet Name">
-    <select id="petSpecies">
-      <option value="cat">Cat</option>
-      <option value="dragon">Dragon</option>
-      <option value="frog">Frog</option>
-      <option value="bunny">Bunny</option>
-      <option value="unicorn">Unicorn</option>
-      <option value="fox">Fox</option>
-      <option value="dog">Dog</option>
-    </select>
-    <button onclick="createPet()">Create Pet</button>
-    <button onclick="feedPet()">Feed</button>
-  </div>
+<div id="callBar"></div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-  <script>
-    // ===== Firebase config =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA",
-      authDomain: "pets-86c25.firebaseapp.com",
-      projectId: "pets-86c25",
-      storageBucket: "pets-86c25.firebasestorage.app",
-      messagingSenderId: "556129222317",
-      appId: "1:556129222317:web:12d323a5165eb222d59024"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA",
+  authDomain: "pets-86c25.firebaseapp.com",
+  projectId: "pets-86c25",
+  storageBucket: "pets-86c25.firebasestorage.app",
+  messagingSenderId: "556129222317",
+  appId: "1:556129222317:web:12d323a5165eb222d59024"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    const speciesSprites = {
-      bunny: "bunny.png",
-      frog: "frog.png",
-      fox: "fox.png",
-      cat: "cat.png",
-      dragon: "dragon.png",
-      unicorn: "unicorn.png",
-      dog: "dog.png"
-    };
+const speciesSprites = {
+  bunny: "bunny.png",
+  frog: "frog.png",
+  fox: "fox.png",
+  cat: "cat.png",
+  dragon: "dragon.png",
+  unicorn: "unicorn.png",
+  dog: "dog.png"
+};
 
-    const foodIcons = {
-      bunny: "🥕",
-      frog: "🪰",
-      fox: "🍔",
-      cat: "🐠",
-      dragon: "🍖",
-      unicorn: "🍎",
-      dog: "🥩"
-    };
+const foodEmojis = {
+  dog: "🥩",
+  frog: "🪰",
+  cat: "🐠",
+  dragon: "🍖",
+  unicorn: "🍎",
+  bunny: "🥕",
+  fox: "🍔"
+};
 
-    const petPositions = {
-      frog: { left: "50px", top: "calc(100% - 150px)" },
-      dog: { left: "60%", top: "calc(100% - 120px)" },
-      bunny: { left: "80%", top: "calc(100% - 130px)" },
-      dragon: { left: "45%", top: "50px" },
-      cat: { left: "50%", top: "60%" },
-      fox: { left: "70%", top: "55%" },
-      unicorn: { left: "40%", top: "60%" }
-    };
+const petPositions = {
+  dragon: { top: '50px', left: '50%' },
+  frog: { top: '80%', left: '10%' },
+  bunny: { top: '75%', left: '80%' },
+  dog: { top: '60%', left: '50%' },
+  cat: { top: '55%', left: '40%' },
+  unicorn: { top: '55%', left: '60%' },
+  fox: { top: '65%', left: '70%' }
+};
 
-    let currentPet = null;
-    let pets = [];
+let currentPet = null;
+let pets = [];
 
-    // Fetch pets
-    async function fetchPets() {
-      const snapshot = await db.collection("pets").get();
-      pets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (pets.length > 0) displayPet(pets[0]); // only one at a time
-    }
+const statsBox = document.getElementById("statsBox");
+const callBar = document.getElementById("callBar");
 
-    function displayPet(pet) {
-      currentPet = pet;
+function renderCallBar() {
+  callBar.innerHTML = "";
+  pets.forEach(pet => {
+    const btn = document.createElement("button");
+    btn.textContent = pet.name;
+    btn.onclick = () => showPet(pet);
+    callBar.appendChild(btn);
+  });
+}
 
-      // Remove old image if exists
-      const old = document.querySelector(".pet");
-      if (old) old.remove();
+function showPet(pet) {
+  // Remove previous pet element
+  if(currentPet && currentPet.el) currentPet.el.remove();
 
-      // Create pet image
-      const img = document.createElement("img");
-      img.src = pet.sprite;
-      img.className = "pet";
-      img.style.left = petPositions[pet.species].left;
-      img.style.top = petPositions[pet.species].top;
-      document.body.appendChild(img);
+  const img = document.createElement("img");
+  img.src = pet.sprite;
+  img.className = "pet";
+  img.style.top = petPositions[pet.species].top;
+  img.style.left = petPositions[pet.species].left;
+  img.style.transform = "translate(-50%, -50%)";
+  document.body.appendChild(img);
 
-      updateStats();
-    }
+  currentPet = {...pet, el: img};
+  updateStatsBox(pet);
+}
 
-    function updateStats() {
-      if (!currentPet) return;
-      document.getElementById("statName").innerText = `Name: ${currentPet.name}`;
-      document.getElementById("statSpecies").innerText = `Species: ${currentPet.species}`;
-      document.getElementById("statHunger").innerText = `Hunger: ${Math.round(currentPet.stats.hunger)}`;
-      document.getElementById("statHappiness").innerText = `Happiness: ${Math.round(currentPet.stats.happiness)}`;
-      document.getElementById("statEnergy").innerText = `Energy: ${Math.round(currentPet.stats.energy)}`;
-      document.getElementById("statHealth").innerText = `Health: ${Math.round(currentPet.stats.health)}`;
-    }
+function updateStatsBox(pet) {
+  document.getElementById("petName").textContent = `Name: ${pet.name}`;
+  document.getElementById("petSpecies").textContent = `Species: ${pet.species}`;
+  document.getElementById("petHunger").textContent = `Hunger: ${Math.round(pet.stats.hunger)}`;
+  document.getElementById("petHappiness").textContent = `Happiness: ${Math.round(pet.stats.happiness)}`;
+  document.getElementById("petEnergy").textContent = `Energy: ${Math.round(pet.stats.energy)}`;
+  document.getElementById("petHealth").textContent = `Health: ${Math.round(pet.stats.health)}`;
+}
 
-    async function createPet() {
-      const name = document.getElementById("petName").value;
-      const species = document.getElementById("petSpecies").value;
-      if (!name || !species) return;
+async function fetchPets() {
+  const snapshot = await db.collection("pets").get();
+  if(snapshot.empty) {
+    const defaultPets = [
+      { name: "Azul", species: "cat" },
+      { name: "Fluffy", species: "dragon" },
+      { name: "Froggy", species: "frog" },
+      { name: "BunnyHop", species: "bunny" },
+      { name: "Sparkle", species: "unicorn" },
+      { name: "Foxy", species: "fox" },
+      { name: "Casper", species: "dog" }
+    ];
 
-      const pet = {
-        name,
-        species,
-        sprite: speciesSprites[species],
-        stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
-        lastUpdated: Date.now()
-      };
-
-      const ref = await db.collection("pets").add(pet);
-      pets.push({ id: ref.id, ...pet });
-      displayPet(pet);
-
-      document.getElementById("petName").value = "";
-    }
-
-    async function feedPet() {
-      if (!currentPet) return;
-      const stats = { ...currentPet.stats };
-      stats.hunger = Math.max(0, stats.hunger - 20);
-      stats.happiness = Math.min(100, stats.happiness + 5);
-
-      await db.collection("pets").doc(currentPet.id).update({
-        stats,
+    for(let pet of defaultPets) {
+      const key = pet.species.toLowerCase();
+      await db.collection("pets").add({
+        name: pet.name,
+        species: key,
+        sprite: speciesSprites[key],
+        stats: { hunger:50,happiness:50,energy:50,health:100 },
         lastUpdated: Date.now()
       });
-
-      currentPet.stats = stats;
-      updateStats();
-
-      // Animate food
-      const food = document.createElement("div");
-      food.className = "food";
-      food.style.left = petPositions[currentPet.species].left;
-      food.style.top = petPositions[currentPet.species].top;
-      food.innerText = foodIcons[currentPet.species];
-      document.body.appendChild(food);
-
-      setTimeout(() => food.remove(), 1000);
     }
+  }
 
-    fetchPets();
-  </script>
+  const newSnapshot = await db.collection("pets").get();
+  pets = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderCallBar();
+  if(pets.length) showPet(pets[0]);
+}
+
+async function feedPet() {
+  if(!currentPet) return;
+  const pet = currentPet;
+
+  // Update stats
+  const stats = {...pet.stats};
+  stats.hunger = Math.max(0, stats.hunger-20);
+  stats.happiness = Math.min(100, stats.happiness+5);
+  await db.collection("pets").doc(pet.id).update({ stats, lastUpdated: Date.now() });
+  pet.stats = stats;
+  updateStatsBox(stats);
+
+  // Show food emoji
+  const food = document.createElement("div");
+  food.textContent = foodEmojis[pet.species];
+  food.className = "food";
+  food.style.top = pet.el.style.top;
+  food.style.left = pet.el.style.left;
+  food.style.transform = "translate(-50%, -50%)";
+  document.body.appendChild(food);
+  setTimeout(()=>food.remove(), 1000);
+}
+
+// Auto-update stats every 10 sec
+setInterval(async () => {
+  for(let pet of pets) {
+    const now = Date.now();
+    const hoursPassed = (now - pet.lastUpdated)/(1000*60*60);
+    if(hoursPassed>0) {
+      pet.stats.hunger = Math.min(100, pet.stats.hunger + 5*hoursPassed);
+      pet.stats.happiness = Math.max(0, pet.stats.happiness - 3*hoursPassed);
+      if(pet.stats.hunger>80||pet.stats.happiness<20) {
+        pet.stats.health = Math.max(0, pet.stats.health-5*hoursPassed);
+      }
+      await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: now });
+    }
+  }
+  if(currentPet) updateStatsBox(currentPet);
+},10000);
+
+fetchPets();
+
+// Keyboard feed shortcut (optional)
+document.addEventListener('keydown', e=>{
+  if(e.key==='f') feedPet();
+});
+</script>
+
+<button onclick="feedPet()" style="position:fixed; bottom:120px; right:10px;">Feed 🥘</button>
+
 </body>
 </html>
