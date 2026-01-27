@@ -395,6 +395,12 @@ setInterval(toggleWeather, 40000);
 
 // Start
 db.collection("pets").orderBy("lastUpdated","desc").limit(1).get().then(s=>{if(!s.empty) display({id:s.docs[0].id,...s.docs[0].data()});});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log("Service Worker Registered"))
+    .catch((err) => console.log("Service Worker Failed", err));
+}
+
 </script>
 
 </body>
