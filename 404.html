@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 - Lost in Maximum Reality</title>
+<title>404 — Lost in Maximum Reality</title>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
 <style>
-body {
+  body {
     margin: 0;
     padding: 0;
-    background: #0a0a0a url('bg_wp.jpg') no-repeat center center fixed;
+    background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
     background-size: cover;
-    font-family: Arial, Helvetica, sans-serif; /* Easier to read */
+    font-family: 'Comic Neue', Arial, sans-serif;
     color: #ff00ff;
     display: flex;
     flex-direction: column;
@@ -19,66 +20,67 @@ body {
     height: 100vh;
     text-align: center;
     overflow: hidden;
-    position: relative;
-}
+  }
 
-h1 {
-    font-size: 2rem;
-    margin: 0 0 20px 0;
-    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
-}
+  h1 {
+    font-size: 5rem;
+    margin: 0;
+    text-shadow: 0 0 8px #ff00ff, 0 0 20px #ff00ff;
+    animation: glitch 1.5s infinite;
+  }
 
-p {
-    font-size: 0.9rem;
-    margin: 0 0 30px 0;
-    color: #ffffff;
-    text-shadow: 0 0 5px #39ff14;
-}
+  p {
+    font-size: 1.2rem;
+    color: #fff;
+    text-shadow: 0 0 8px #ff00ff;
+    margin: 15px 0 30px 0;
+  }
 
-a.home-link {
+  a.home-btn {
     display: inline-block;
-    padding: 12px 20px;
-    color: #000;
-    background: #ff00ff;
-    border-radius: 12px;
-    text-decoration: none;
+    padding: 12px 25px;
+    font-size: 1rem;
     font-weight: bold;
+    color: #1a1a1a;
+    background: #ff00ff;
+    border-radius: 25px;
+    text-decoration: none;
     box-shadow: 0 0 15px #ff00ff;
-    transition: all 0.2s ease;
-    z-index: 1000;
-    position: relative;
-}
-
-a.home-link:hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  a.home-btn:hover {
     transform: scale(1.1);
-    box-shadow: 0 0 25px #ff00ff, 0 0 50px #39ff14;
-}
+    box-shadow: 0 0 30px #ff00ff;
+  }
 
-/* Casper Sprite */
-#casper {
-    position: absolute;
-    bottom: 20px;
-    left: -150px; /* Start off-screen */
-    width: 120px;  /* Fixed size */
+  /* Casper the Bulldog sprite */
+  .dog-sprite {
+    width: 200px; /* keep him reasonable size */
     height: auto;
-    z-index: 500;
-    animation: walkRight 8s linear infinite;
-}
+    margin-top: 30px;
+    filter: drop-shadow(0 0 15px #39ff14);
+    animation: float 3s ease-in-out infinite;
+  }
 
-@keyframes walkRight {
-    0% { left: -150px; transform: scaleX(1); }
-    50% { left: 50%; transform: scaleX(1); }
-    100% { left: 100%; transform: scaleX(1); }
-}
+  /* Animations */
+  @keyframes glitch {
+    0% { text-shadow: 2px 2px #ff00ff, -2px -2px #00ff41; }
+    25% { text-shadow: -2px 2px #00ff41, 2px -2px #ff00ff; }
+    50% { text-shadow: 2px -2px #ff00ff, -2px 2px #00ff41; }
+    75% { text-shadow: -2px -2px #00ff41, 2px 2px #ff00ff; }
+    100% { text-shadow: 2px 2px #ff00ff, -2px -2px #00ff41; }
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
 </style>
 </head>
 <body>
-
-<h1 class="glitch" data-text="404 ERROR">404 ERROR</h1>
-<p>Oops! Looks like this pixelated path doesn't exist in the Maximum Reality Universe.</p>
-<a href="https://maximumreality.xyz/" class="home-link">🏠 Return Home</a>
-
-<img src="https://maximumreality.github.io/pets/dog.png" id="casper" alt="Casper the French Bulldog">
-
+  <h1>404</h1>
+  <p>Uh oh! Looks like you've wandered off the map in Maximum Reality.</p>
+  <a href="https://maximumreality.github.io/pets/" class="home-btn">🏠 Return Home</a>
+  <img src="dog.png" alt="Casper the French Bulldog" class="dog-sprite">
 </body>
 </html>
