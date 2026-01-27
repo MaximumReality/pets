@@ -175,12 +175,65 @@
       save();
     }
 
-    function setVol(val, e) {
-      e.stopPropagation();
-      bgMusic.volume = val;
-      if (val > 0) bgMusic.play().catch(() => {});
-      else bgMusic.pause();
-    }
+    // --- SEAMLESS AUDIO ENGINE ---
+let audioCtx, audioBuffer, sourceNode, gainNode;
+
+async function initSeamlessAudio() {
+  if (audioCtx) return; // Don't re-init if already running
+  
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = audioCtx.createGain();
+  gainNode.connect(audioCtx.destination);
+
+  try {
+    const response = await fetch('happy-day.mp3');
+    const arrayBuffer = await response.arrayBuffer();
+    audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    
+    // Create and start the loop
+    sourceNode = audioCtx.createBufferSource();
+    sourceNode.buffer = audioBuffer;
+    sourceNode.loop = true; // High-performance looping (No Hiccups!)
+    sourceNode.connect(gainNode);
+    sourceNode.start(0);
+  } catch (err) {
+    console.error("Audio Load Error:", err);
+  }
+}
+
+function setVol(val, e) {
+  if (e) e.stopPropagation();
+  
+  // Unlock audio engine for Safari on first tap
+  if (!audioCtx) {
+    initSeamlessAudio();
+    // Give it a second to load before setting volume
+    setTimeout(() => { if(gainNode) gainNode.gain.value = val; }, 500);
+    return;
+  }
+
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  // Smooth Volume Ramp (Prevents "popping" sounds)
+  gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
+}
+
+// --- UPDATED SLEEP FUNCTION (With Fade) ---
+function toggleSleep(e) {
+  e.stopPropagation();
+  isSleeping = !isSleeping;
+  
+  document.body.style.filter = isSleeping ? "brightness(0.4)" : "none";
+  
+  // Automatically lower volume if sleeping, bring it back if awake
+  if (gainNode) {
+    const targetVol = isSleeping ? 0.1 : 0.5; // Dims music to 10%
+    gainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 1.5);
+  }
+  
+  save();
+}
+
 
     function handlePetting(e) {
       if (!pet || isSleeping || pet.stats.health <= 0) return;
