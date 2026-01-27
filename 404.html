@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 - Lost in Maximum Reality</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: #0a0a0a url('bg_wp.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Press Start 2P', cursive, monospace;
+    color: #ff00ff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+}
+
+h1 {
+    font-size: 2rem;
+    margin: 0 0 20px 0;
+    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+}
+
+p {
+    font-size: 0.8rem;
+    margin: 0 0 30px 0;
+    color: #ffffff;
+    text-shadow: 0 0 5px #39ff14;
+}
+
+a.home-link {
+    display: inline-block;
+    padding: 12px 20px;
+    color: #000;
+    background: #ff00ff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 0 15px #ff00ff;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    position: relative;
+}
+
+a.home-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px #ff00ff, 0 0 50px #39ff14;
+}
+
+/* Glitch Header */
+@keyframes glitch {
+    0% { clip: rect(42px, 9999px, 44px, 0); transform: skew(0.5deg); }
+    5% { clip: rect(12px, 9999px, 85px, 0); transform: skew(0.5deg); }
+    10% { clip: rect(72px, 9999px, 95px, 0); transform: skew(0.5deg); }
+    15% { clip: rect(20px, 9999px, 50px, 0); transform: skew(0.5deg); }
+    20% { clip: rect(50px, 9999px, 80px, 0); transform: skew(0.5deg); }
+    100% { clip: rect(42px, 9999px, 44px, 0); transform: skew(0.5deg); }
+}
+
+h1.glitch {
+    position: relative;
+    color: #ff00ff;
+}
+h1.glitch::before, h1.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+}
+h1.glitch::before {
+    animation: glitch 2s infinite linear alternate-reverse;
+    clip: rect(0, 900px, 0, 0);
+    color: #00ff41;
+}
+h1.glitch::after {
+    animation: glitch 1.5s infinite linear alternate-reverse;
+    clip: rect(0, 900px, 0, 0);
+    color: #ffcc00;
+}
+
+/* Casper Sprite */
+#casper {
+    position: absolute;
+    bottom: 20px;
+    left: -150px; /* Start off-screen */
+    width: 120px;  /* Fixed size */
+    height: auto;
+    z-index: 500;
+    animation: walkRight 8s linear infinite;
+}
+
+@keyframes walkRight {
+    0% { left: -150px; transform: scaleX(1); }
+    50% { left: 50%; transform: scaleX(1); }
+    100% { left: 100%; transform: scaleX(1); }
+}
+</style>
+</head>
+<body>
+
+<h1 class="glitch" data-text="404 ERROR">404 ERROR</h1>
+<p>Oops! Looks like this pixelated path doesn't exist in the Maximum Reality Universe.</p>
+<a href="https://maximumreality.xyz/" class="home-link">🏠 Return Home</a>
+
+<img src="https://maximumreality.github.io/pets/dog.png" id="casper" alt="Casper the French Bulldog">
+
+</body>
+</html>
