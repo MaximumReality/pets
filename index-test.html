@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Reality Pets: Ultimate Command Center</title>
+<title>Reality Pets: Command Center</title>
 <style>
 :root {
   --glass: rgba(0,0,0,0.85);
@@ -20,116 +20,65 @@ body {
 }
 .flash { background:white !important; transition: background 0.1s; }
 
-/* --- HUD & TOP CONTROLS --- */
+/* HUD & TOP CONTROLS */
 #hud-container {
-  position:absolute; 
-  top:calc(var(--safe-top) + 10px); 
-  left:50%; 
-  transform:translateX(-50%);
-  z-index:10000; 
-  display:flex; 
-  flex-direction:column; 
-  align-items:center; 
-  gap:12px; /* Spaces out Stats from Volume Bar */
-  width: 90%;
+  position:absolute; top:calc(var(--safe-top) + 10px); left:50%; transform:translateX(-50%);
+  z-index:10000; display:flex; flex-direction:column; align-items:center; gap:12px; width: 90%;
 }
 .hud-bar {
-  background:var(--glass); 
-  padding:10px 18px; 
-  border-radius:30px; 
-  backdrop-filter:blur(15px);
-  border:1px solid rgba(255,255,255,0.15); 
-  display:flex; 
-  align-items:center; 
-  gap:15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  background:var(--glass); padding:10px 18px; border-radius:30px; backdrop-filter:blur(15px);
+  border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; gap:15px;
 }
 #statsBox { display:flex; gap:12px; font-size:12px; font-weight:bold; white-space: nowrap; }
-.gear-btn { background:none; border:none; font-size:22px; cursor:pointer; padding:0; filter: drop-shadow(0 0 5px var(--gold)); }
+.gear-btn { background:none; border:none; font-size:22px; cursor:pointer; padding:0; }
 
 .audio-controls {
-  display:flex; 
-  gap:15px; 
-  background:rgba(0,0,0,0.6); 
-  padding:6px 20px; 
-  border-radius:20px;
+  display:flex; gap:15px; background:rgba(0,0,0,0.6); padding:6px 20px; border-radius:20px;
   border: 1px solid rgba(255,255,255,0.1);
 }
-.audio-controls button { background:none; border:none; color:white; font-size: 18px; cursor: pointer; }
+.audio-controls button { background:none; border:none; color:white; font-size: 18px; }
 
-/* --- CREATE MENU --- */
 #createMenu {
   display:none; background:var(--glass); padding:20px; border-radius:20px;
   width:220px; box-shadow:0 10px 40px rgba(0,0,0,0.9); border:1px solid var(--gold);
-  margin-top: 10px;
 }
-#createMenu input,#createMenu select { width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:none; background: #333; color: white; }
+#createMenu input, #createMenu select { width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:none; }
 
-/* --- WORLD & PET --- */
-#game-world { position:absolute; z-index:50; transition:all 0.8s ease; pointer-events: none; }
-.pet-img { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor:pointer; pointer-events: auto; }
+/* WORLD & PET */
+#game-world { position:absolute; z-index:50; transition:all 0.8s ease; }
+.pet-img { filter:drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor:pointer; }
 .wander { animation:wander 14s linear infinite alternate; }
 @keyframes wander { 0%{transform:translate(-60px,0);} 100%{transform:translate(60px,0);} }
 
-/* --- BOTTOM ACTION BAR --- */
+/* BOTTOM ACTION BAR */
 .action-bar {
-  position:absolute; 
-  bottom:calc(var(--safe-bottom) + 20px); 
-  left:50%; 
-  transform:translateX(-50%);
-  display:flex; 
-  gap:14px; 
-  z-index:10000;
-  background:rgba(0,0,0,0.8); 
-  padding:15px 20px; 
-  border-radius:40px; 
-  backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,0.1);
+  position:absolute; bottom:calc(var(--safe-bottom) + 20px); left:50%; transform:translateX(-50%);
+  display:flex; gap:14px; z-index:10000; background:rgba(0,0,0,0.8); padding:15px 20px; border-radius:40px;
+  backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1);
 }
-.action-bar button { 
-  background:#2a2a2a; 
-  border:1px solid #444; 
-  color:white; 
-  border-radius:50%; 
-  width:56px; 
-  height:56px; 
-  font-size:28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
+.action-bar button { background:#2a2a2a; border:1px solid #444; color:white; border-radius:50%; width:56px; height:56px; font-size:28px; }
 
-/* --- NIGHT & STARS --- */
+/* MESS & EFFECTS */
+.mess { position:absolute; font-size:28px; z-index:6; pointer-events:none; }
+.fly { position:absolute; font-size:14px; animation:flyBuzz 0.4s infinite alternate; z-index:100; pointer-events:none; }
+@keyframes flyBuzz { 0%{transform:translate(0,0);} 100%{transform:translate(6px,-6px);} }
+.pop { position:absolute; font-size:35px; animation:popUp 1.2s forwards; z-index:10001; pointer-events:none; }
+@keyframes popUp { 0%{opacity:1;} 100%{transform:translateY(-100px); opacity:0;} }
+
+/* NIGHT MODE */
 .night-mode {
   background-image: linear-gradient(rgba(0,0,50,0.6), rgba(0,0,50,0.6)), url('bg_wp.jpg') !important;
   filter: brightness(0.7) saturate(0.9);
   transition: all 1.2s ease;
 }
 .hud-star {
-  position: absolute;
-  pointer-events: none; 
-  font-size: 12px;
-  z-index: 9999;
-  animation: starTwinkle 2.5s ease-in-out infinite alternate;
-  opacity: 0;
+  position: absolute; pointer-events: none; font-size: 12px; z-index: 9999;
+  animation: starTwinkle 2.5s ease-in-out infinite alternate; opacity: 0;
 }
-@keyframes starTwinkle {
-  0% { transform: scale(0.6); opacity: 0.2; }
-  100% { transform: scale(1.3); opacity: 1; }
-}
-
-/* Rain & Pops */
-#weather-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; }
-.rain-drop { position:absolute; background:#4fa1ff; width:2px; height:15px; opacity:0.6; animation:rainFall 0.8s linear infinite; }
-@keyframes rainFall { 0%{transform:translateY(-100px);} 100%{transform:translateY(100vh);} }
-.pop { position:absolute; font-size:35px; animation:popUp 1.2s forwards; z-index:10001; pointer-events:none; }
-@keyframes popUp { 0%{opacity:1;} 100%{transform:translateY(-100px); opacity:0;} }
+@keyframes starTwinkle { 0% { transform: scale(0.6); opacity: 0.2; } 100% { transform: scale(1.3); opacity: 1; } }
 </style>
 </head>
 <body onclick="handlePetting(event)">
-
-<div id="weather-layer"></div>
 
 <div id="hud-container">
   <div class="hud-bar">
@@ -139,13 +88,11 @@ body {
       <div id="sh">H:—</div><div id="se">E:—</div><div id="shp">HP:—</div>
     </div>
   </div>
-
   <div class="audio-controls">
     <button onclick="setVol(0,event)">🔈</button>
     <button onclick="setVol(0.3,event)">🔉</button>
     <button onclick="setVol(0.7,event)">🔊</button>
   </div>
-
   <div id="createMenu">
     <input id="petName" placeholder="Pet Name">
     <select id="petSpecies">
@@ -173,135 +120,108 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-// --- Firebase Config ---
+<script>
+// --- Config ---
 const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// --- Game State ---
-let pet=null, isSleeping=false, isRaining=false;
+let pet=null, isSleeping=false;
 let audioCtx, gainNode;
 const foodMap={bunny:"🥕",fox:"🍔",dog:"🥩",dragon:"🍖",cat:"🐠",unicorn:"🍎",frog:"🪰"};
 const reactMap={bunny:"🐰",fox:"🦊",dog:"🐕",cat:"😼",frog:"🐸",dragon:"🔥",unicorn:"✨"};
 const petPositions={frog:{left:"25%",bottom:"25%"},bunny:{left:"65%",bottom:"28%"},fox:{left:"55%",bottom:"30%"},dog:{left:"50%",bottom:"32%"},cat:{left:"45%",bottom:"34%"},unicorn:{left:"70%",bottom:"36%"},dragon:{left:"50%",bottom:"60%"}};
 
-// --- The Heartbeat (Energy, Hunger, & Poop Spawn) ---
+// --- HEARTBEAT ---
 function gameHeartbeat() {
   if (!pet || pet.stats.health <= 0) return;
-
   if (isSleeping) {
     pet.stats.energy = Math.min(100, pet.stats.energy + 10);
     pet.stats.health = Math.min(100, pet.stats.health + 2);
   } else {
     pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
     pet.stats.energy = Math.max(0, pet.stats.energy - 1);
-    
-    // Logic for Poop & Flies
-    if (pet.stats.hunger > 70 || pet.stats.health < 50) {
-      if (Math.random() > 0.8) spawnMess();
-      showFlies(true);
-    } else {
-      showFlies(false);
-    }
+    if (pet.stats.hunger > 70) { if (Math.random() > 0.7) spawnMess(); showFlies(true); } 
+    else { showFlies(false); }
   }
   save();
 }
 setInterval(gameHeartbeat, 5000);
 
-// --- Interactions ---
+// --- ACTIONS ---
 function feedPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   pet.stats.hunger = Math.max(0, pet.stats.hunger - 25);
   spawnPop(foodMap[pet.species] || "🍎", window.innerWidth/2, window.innerHeight/2);
   save();
 }
-
 function playPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   if(pet.stats.energy < 15) { spawnPop("💤 Tired", window.innerWidth/2, 200); return; }
   pet.stats.energy = Math.max(0, pet.stats.energy - 15);
-  pet.stats.xp = (pet.stats.xp || 0) + 15;
+  pet.stats.xp = (pet.stats.xp || 0) + 20;
   spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2);
-  checkLevelUp();
-  save();
+  checkLevelUp(); save();
 }
-
 function cleanPet(e){
   e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
-  pet.stats.health = Math.min(100, pet.stats.health + 15);
-  // Clear all poops and flies
+  pet.stats.health = Math.min(100, pet.stats.health + 10);
   document.getElementById('messes').innerHTML = '';
   showFlies(false);
-  spawnPop("🫧🧹", window.innerWidth/2, window.innerHeight/2);
+  spawnPop("🫧", window.innerWidth/2, window.innerHeight/2);
   save();
 }
-
 function doctorPet(e){
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   pet.stats.health = Math.min(100, pet.stats.health + 30);
   document.body.classList.add('flash'); setTimeout(()=>document.body.classList.remove('flash'),100);
-  spawnPop("🩺✨", window.innerWidth/2, window.innerHeight/2);
+  spawnPop("🩺", window.innerWidth/2, window.innerHeight/2);
   save();
 }
+function resurrectPet(e){
+  e.stopPropagation(); pet.stats={hunger:50,energy:50,health:100,level:1,xp:0};
+  display(pet); save();
+}
 
-// --- Environment Helpers ---
+// --- LOGIC ---
 function spawnMess(){
   const m=document.createElement('div'); m.className='mess'; m.innerText='💩'; 
   m.style.left=(Math.random()*60+20)+'%'; m.style.bottom='22%'; 
   document.getElementById('messes').appendChild(m);
 }
-
 function showFlies(show) {
-  const world = document.getElementById("game-world");
   document.querySelectorAll('.fly').forEach(f => f.remove());
   if (show) {
     for(let i=0; i<3; i++) {
       const f = document.createElement('div'); f.className='fly'; f.innerText='🪰';
       f.style.left=Math.random()*40+'px'; f.style.top=Math.random()*40+'px';
-      world.appendChild(f);
+      document.getElementById("game-world").appendChild(f);
     }
   }
 }
-
 function checkLevelUp() {
-  if(pet.stats.xp >= 100) {
-    pet.stats.level++; pet.stats.xp = 0;
-    spawnPop("✨ LEVEL UP!", window.innerWidth/2, 100);
-    display(pet);
-  }
+  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); }
 }
-
-// --- Sleep & Stars ---
 function toggleSleep(e) {
-  e.stopPropagation();
-  isSleeping = !isSleeping;
+  e.stopPropagation(); isSleeping = !isSleeping;
   document.body.classList.toggle('night-mode', isSleeping);
   isSleeping ? spawnStars() : removeStars();
-  if(gainNode) gainNode.gain.setTargetAtTime(isSleeping ? 0.05 : 0.5, audioCtx.currentTime, 1.5);
   save();
 }
-
 function spawnStars() {
-  const hud = document.getElementById('hud-container');
-  removeStars();
-  const starTypes = ['✨','🌟','⭐'];
+  const hud = document.getElementById('hud-container'); removeStars();
   for (let i = 0; i < 12; i++) {
-    const star = document.createElement('div');
-    star.className = 'hud-star';
-    star.innerText = starTypes[Math.floor(Math.random()*3)];
-    star.style.top = (Math.random() * 60 - 10) + 'px';
-    star.style.left = (Math.random() * 100) + '%';
-    star.style.animationDelay = (Math.random() * 2) + 's';
+    const star = document.createElement('div'); star.className = 'hud-star';
+    star.innerText = ['✨','🌟','⭐'][Math.floor(Math.random()*3)];
+    star.style.top = (Math.random() * 80 - 10) + 'px'; star.style.left = (Math.random() * 100) + '%';
     hud.appendChild(star);
   }
 }
-
 function removeStars() { document.querySelectorAll('.hud-star').forEach(s => s.remove()); }
 
-// --- Core Engine ---
+// --- ENGINE ---
 function display(data){
-  pet=data;
-  const world=document.getElementById("game-world");
+  pet=data; const world=document.getElementById("game-world");
   const pos=petPositions[pet.species]||{left:"50%",bottom:"32%"};
   world.style.left=pos.left; world.style.bottom=pos.bottom;
   const isDead = pet.stats.health <= 0;
@@ -309,37 +229,39 @@ function display(data){
   world.innerHTML=`<img src="${pet.species}.png" class="pet-img ${isDead?'is-ghost':''}" style="width:${80+(pet.stats.level*5)}px">`;
   updateUI();
 }
-
 function updateUI(){
-  if(!pet) return;
-  document.getElementById("sn").innerHTML=`<b>${pet.name}</b> (Lv.${pet.stats.level})`;
-  document.getElementById("sh").innerText=`H:${Math.round(pet.stats.hunger)}%`;
-  document.getElementById("se").innerText=`E:${Math.round(pet.stats.energy)}%`;
-  document.getElementById("shp").innerText=`HP:${Math.round(pet.stats.health)}%`;
-  document.getElementById("resBtn").style.display=(pet.stats.health<=0)?"flex":"none";
+  if(!pet) return; const s=pet.stats;
+  document.getElementById("sn").innerHTML=`<b>${pet.name}</b> (Lv.${s.level})`;
+  document.getElementById("sh").innerText=`H:${Math.round(s.hunger)}%`;
+  document.getElementById("se").innerText=`E:${Math.round(s.energy)}%`;
+  document.getElementById("shp").innerText=`HP:${Math.round(s.health)}%`;
+  document.getElementById("resBtn").style.display=(s.health<=0)?"flex":"none";
 }
-
 function spawnPop(txt,x,y){
   const p=document.createElement("div"); p.className="pop"; p.innerText=txt; 
   p.style.left=(x-20)+"px"; p.style.top=(y-20)+"px"; 
   document.body.appendChild(p); setTimeout(()=>p.remove(),1200);
 }
-
 function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
 function handlePetting(e){
   if(!pet || isSleeping || pet.stats.health <= 0) return;
   if(e.target.classList.contains('pet-img')){
-    pet.stats.xp = (pet.stats.xp || 0) + 5;
-    spawnPop(reactMap[pet.species]||"💕", e.clientX, e.clientY);
+    pet.stats.xp += 5; spawnPop(reactMap[pet.species]||"💕", e.clientX, e.clientY);
     checkLevelUp(); save();
   }
 }
 async function save(){ if(pet && pet.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); updateUI(); }
+async function createPet(){
+  const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
+  const res=await db.collection("pets").add({name:n,species:s,lastUpdated:Date.now(),stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
+  display({id:res.id,name:n,species:s,stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
+  document.getElementById('createMenu').style.display='none';
+}
 async function fetchPet(){
   const snap=await db.collection("pets").orderBy("lastUpdated","desc").limit(1).get();
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
 fetchPet();
->
+</script>
 </body>
 </html>
