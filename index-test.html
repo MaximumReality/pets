@@ -12,20 +12,24 @@
   --safe-bottom: env(safe-area-inset-bottom, 34px);
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* Prevents Safari bouncing/zooming */
+}
+
 body {
   margin: 0; padding: 0;
   font-family: -apple-system, sans-serif;
   background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
   background-size: cover;
   color: #fff; 
-  height: 100dvh; /* Dynamic height for Safari */
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   position: fixed;
-  touch-action: manipulation;
 }
 
-/* TOP HUD - Back to the way you liked it */
+/* TOP HUD - Back to a clean Pill Bar */
 #hud-container { 
   position: absolute;
   top: var(--safe-top);
@@ -34,37 +38,39 @@ body {
   display: flex; 
   flex-direction: column; 
   align-items: center; 
-  gap: 10px; 
-  width: 90%;
+  width: 95%;
   z-index: 10000;
+  pointer-events: none; /* Allows pet interaction through the gaps */
 }
 
 .hud-bar { 
+  pointer-events: auto; /* Makes stats/cog clickable */
   background: var(--glass); 
-  padding: 8px 15px; 
-  border-radius: 25px; 
+  padding: 8px 18px; 
+  border-radius: 40px; 
   backdrop-filter: blur(15px); 
   border: 1px solid rgba(255,255,255,0.15); 
   display: flex; 
   align-items: center; 
-  gap: 15px;
+  gap: 12px;
+  width: fit-content;
 }
 
-/* MENU FIX: No more yellow line! */
+#statsBox { display: flex; gap: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+/* MENU FIX */
 #createMenu {
+  pointer-events: auto;
   display: none; 
   background: var(--glass); 
   border-radius: 20px; 
   width: 280px; 
-  min-height: 100px; /* Prevents the line effect */
-  box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
   border: 1px solid var(--gold);
-  z-index: 10002; 
-  overflow: hidden; 
   margin-top: 10px;
+  overflow: hidden;
 }
 
-/* BOTTOM BAR - Floating comfortably above Safari */
+/* BOTTOM BAR - Functional and floating */
 .action-bar { 
   position: absolute;
   bottom: calc(var(--safe-bottom) + 15px);
@@ -72,41 +78,46 @@ body {
   transform: translateX(-50%);
   display: flex; 
   gap: 12px; 
-  z-index: 10000;
-  background: rgba(0,0,0,0.8); 
-  padding: 12px 18px; 
-  border-radius: 35px; 
+  z-index: 10001; /* Higher than anything else */
+  background: rgba(0,0,0,0.85); 
+  padding: 12px 20px; 
+  border-radius: 40px; 
   backdrop-filter: blur(20px); 
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  pointer-events: auto; /* CRITICAL: Must be auto to work */
 }
 
 .action-bar button { 
   background: #222; border: 1px solid #444; color: white; 
   border-radius: 50%; width: 54px; height: 54px; font-size: 26px; 
+  display: flex; align-items: center; justify-content: center;
 }
 
-/* PET - Centered but out of the way of the bars */
+/* PET AREA */
 #game-world { 
   position: absolute; 
-  top: 52%; left: 50%; 
+  top: 50%; left: 50%; 
   transform: translate(-50%, -50%); 
   z-index: 50; 
   text-align: center;
+  pointer-events: auto;
 }
+.pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); width: 120px; }
 
-.pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
-.wander { animation: wander 14s linear infinite alternate; }
-@keyframes wander { 0% { transform: translate(-60px, 0); } 100% { transform: translate(60px, 0); } }
+/* RE-ADD POPUP STYLES */
+.pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 10005; pointer-events: none; }
+@keyframes popUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
 </style>
 
 <body onclick="handlePetting(event)">
   <div id="night-overlay"></div>
   <div id="flash-layer" class="flash-overlay"></div>
   <div id="weather-layer"></div>
+  <div id="messes"></div>
 
   <div id="hud-container">
     <div class="hud-bar">
-      <button style="background:none; border:none; font-size:20px;" onclick="toggleMenu(event)">⚙️</button>
+      <button style="background:none; border:none; font-size:20px; color:white;" onclick="toggleMenu(event)">⚙️</button>
       <div id="statsBox">
         <div id="sn"><b>Casper</b></div>
         <div id="sh">H:—</div><div id="se">E:—</div><div id="shp">HP:—</div>
@@ -114,25 +125,24 @@ body {
     </div>
 
     <div id="createMenu">
-      <div class="menu-tabs" style="display:flex; background:rgba(255,255,255,0.1);">
-        <button class="tab-btn active" onclick="switchTab('help')" style="flex:1; padding:10px; color:white; background:none; border:none;">Manual</button>
-        <button class="tab-btn" onclick="switchTab('hof')" style="flex:1; padding:10px; color:white; background:none; border:none;">Legends</button>
-        <button class="tab-btn" onclick="switchTab('adopt')" style="flex:1; padding:10px; color:white; background:none; border:none;">Adopt</button>
+      <div style="display:flex; background:rgba(255,255,255,0.1);">
+        <button onclick="switchTab('help')" style="flex:1; padding:10px; color:white; background:none; border:none; font-weight:bold;">Manual</button>
+        <button onclick="switchTab('hof')" style="flex:1; padding:10px; color:white; background:none; border:none; font-weight:bold;">Legends</button>
+        <button onclick="switchTab('adopt')" style="flex:1; padding:10px; color:white; background:none; border:none; font-weight:bold;">Adopt</button>
       </div>
-      <div id="helpTab" class="menu-content" style="padding:15px; font-size:12px;">
-        <p><b>H:</b> Hunger (Drop Food 🍎)<br><b>E:</b> Energy (Sleep 🌙)<br><b>HP:</b> Health (Clean 🧽 / Med 🩺)</p>
+      <div id="helpTab" style="padding:15px; font-size:12px;">
+        H: Hunger (🍎) | E: Energy (🌙) | HP: Health (🧽/🩺)
       </div>
-      <div id="hofTab" class="menu-content" style="display:none; padding:15px;"><div id="hofList">Loading...</div></div>
-      <div id="adoptTab" class="menu-content" style="display:none; padding:15px;">
-        <input id="petName" placeholder="Name" style="width:90%; background:#333; color:white; border:none; padding:8px; border-radius:5px; margin-bottom:5px;">
-        <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; font-weight:bold; border-radius:5px;">ADOPT</button>
+      <div id="hofTab" style="display:none; padding:15px;"><div id="hofList">Loading...</div></div>
+      <div id="adoptTab" style="display:none; padding:15px;">
+        <input id="petName" placeholder="Name" style="width:80%; margin-bottom:10px;">
+        <button onclick="createPet()" style="background:var(--gold); border:none; padding:8px; width:100%; border-radius:5px;">Adopt</button>
       </div>
     </div>
 
-    <div class="audio-controls" style="display:flex; gap:10px; background:rgba(0,0,0,0.4); padding:5px 15px; border-radius:15px;">
-      <button onclick="setVol(0, event)" style="background:none; border:none; color:white;">🔈</button>
-      <button onclick="setVol(0.3, event)" style="background:none; border:none; color:white;">🔉</button>
-      <button onclick="setVol(0.7, event)" style="background:none; border:none; color:white;">🔊</button>
+    <div class="audio-controls" style="display:flex; gap:15px; margin-top:10px; pointer-events:auto;">
+       <button onclick="setVol(0, event)" style="background:none; border:none;">🔈</button>
+       <button onclick="setVol(0.5, event)" style="background:none; border:none;">🔉</button>
     </div>
   </div>
 
@@ -145,6 +155,13 @@ body {
     <button onclick="doctorPet(event)">🩺</button>
     <button onclick="toggleSleep(event)">🌙</button>
   </div>
+
+<script>
+// IMPORTANT: Keep your Firebase initialization code here!
+// All the functions (feedPet, toggleSleep, etc.) from the previous successful versions should go here.
+// Make sure updateUI() is called inside every action!
+</script>
+
 
   </div>
 
