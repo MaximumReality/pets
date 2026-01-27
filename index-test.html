@@ -146,13 +146,14 @@ select, input { width: 100%; background: #333; color: white; border: 1px solid #
     <div id="adoptTab" style="display:none; text-align:center;">
       <input id="petName" placeholder="Pet Name">
       <select id="petSpecies">
-        <option value="dog">Dog 🐕</option>
-        <option value="cat">Cat 🐱</option>
-        <option value="dragon">Dragon 🐲</option>
-        <option value="bunny">Bunny 🐰</option>
-        <option value="fox">Fox 🦊</option>
-        <option value="unicorn">Unicorn 🦄</option>
-      </select>
+  <option value="dog">Dog 🐕</option>
+  <option value="cat">Cat 🐱</option>
+  <option value="dragon">Dragon 🐲</option>
+  <option value="bunny">Bunny 🐰</option>
+  <option value="fox">Fox 🦊</option>
+  <option value="unicorn">Unicorn 🦄</option>
+  <option value="frog">Frog 🐸</option> </select>
+
       <button onclick="createPet()" style="background:var(--gold); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold;">ADOPT</button>
     </div>
     
@@ -178,17 +179,54 @@ select, input { width: 100%; background: #333; color: white; border: 1px solid #
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
 <script>
 const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let pet = null, isSleeping = false, isRaining = false;
-let audioCtx, gainNode;
-const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎" };
-const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"🐱", unicorn:"🦄" };
+let audioCtx, gainNode, musicSource;
+// Added Frog and Flies!
+const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎", frog:"🪰" };
+const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"🐱", unicorn:"🦄", frog:"🐸" };
 
-// --- LOGIC ---
+// --- AUDIO SYSTEM (RE-FIXED) ---
+async function initAudio() {
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return;
+  }
+  
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = audioCtx.createGain();
+  gainNode.connect(audioCtx.destination);
+  
+  try {
+    const res = await fetch('happy-day.mp3');
+    const ab = await res.arrayBuffer();
+    const buffer = await audioCtx.decodeAudioData(ab);
+    
+    musicSource = audioCtx.createBufferSource();
+    musicSource.buffer = buffer;
+    musicSource.loop = true;
+    musicSource.connect(gainNode);
+    musicSource.start(0);
+    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  } catch (e) {
+    console.log("Audio failed to load:", e);
+  }
+}
+
+function setVol(val, e) {
+  if(e) e.stopPropagation();
+  initAudio(); // Initialize on first click
+  if (gainNode) {
+    gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2);
+  }
+}
+
+// --- ENGINE ---
 function gameHeartbeat() {
   if (!pet) return;
   const world = document.getElementById("game-world");
@@ -198,13 +236,19 @@ function gameHeartbeat() {
     world.innerHTML = `<div style="font-size:80px; filter:grayscale(1) opacity(0.7);">👻</div><div>RIP ${pet.name}</div>`;
     updateUI(); return;
   }
-  if (isSleeping) { pet.stats.energy = Math.min(100, pet.stats.energy + 10); spawnPop("💤"); }
-  else { pet.stats.hunger = Math.min(100, pet.stats.hunger + 2); pet.stats.energy = Math.max(0, pet.stats.energy - 1); if (pet.stats.hunger > 90 || pet.stats.energy <= 0) pet.stats.health -= 3; }
+  if (isSleeping) { 
+    pet.stats.energy = Math.min(100, pet.stats.energy + 10); 
+    spawnPop("💤"); 
+  } else { 
+    pet.stats.hunger = Math.min(100, pet.stats.hunger + 2); 
+    pet.stats.energy = Math.max(0, pet.stats.energy - 1); 
+    if (pet.stats.hunger > 90 || pet.stats.energy <= 0) pet.stats.health -= 3; 
+  }
   updateUI(); save();
 }
 setInterval(gameHeartbeat, 5000);
 
-// --- TABS ---
+// --- TABS & SCROLLING ---
 function switchTab(t) {
   ['helpTab','hofTab','adoptTab','mypetsTab'].forEach(id => document.getElementById(id).style.display = 'none');
   const target = document.getElementById(t + 'Tab');
@@ -219,12 +263,23 @@ async function fetchMyPets() {
   list.innerHTML = snap.docs.map(doc => {
     const p = doc.data();
     return `<div class="pet-row">
-        <div onclick="loadPet('${doc.id}')" style="flex:1; cursor:pointer;">
+        <div onclick="loadPet('${doc.id}')" style="flex:1;">
           ${p.stats.health <= 0 ? '👻' : (emojiMap[p.species] || '🐾')} <b>${p.name}</b> <small>Lv.${p.stats.level}</small>
         </div>
         <button class="delete-btn" onclick="deletePet('${doc.id}', '${p.name}', event)">🗑️</button>
       </div>`;
   }).join('');
+}
+
+async function loadPet(id) {
+  const doc = await db.collection("pets").doc(id).get();
+  if(doc.exists) { 
+    isSleeping = false; 
+    document.getElementById('night-overlay').style.opacity = "0";
+    display({id: doc.id, ...doc.data()}); 
+    document.getElementById('createMenu').style.display = 'none';
+    initAudio(); // Resume music if user interacts
+  }
 }
 
 async function deletePet(id, name, e) {
@@ -236,25 +291,28 @@ async function deletePet(id, name, e) {
   }
 }
 
-async function loadPet(id) {
-  const doc = await db.collection("pets").doc(id).get();
-  if(doc.exists) { 
-    isSleeping = false; document.getElementById('night-overlay').style.opacity = "0";
-    display({id: doc.id, ...doc.data()}); document.getElementById('createMenu').style.display = 'none';
-  }
-}
-
 async function fetchHOF() {
   const snap = await db.collection("pets").orderBy("stats.level", "desc").limit(10).get();
   document.getElementById('hofList').innerHTML = snap.docs.map(d => `<div class="pet-row"><span>${d.data().name}</span><b>Lv.${d.data().stats.level}</b></div>`).join('');
 }
 
 // --- ACTIONS ---
-function feedPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🥩"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1000); updateUI(); save(); }
+function feedPet(e) { e.stopPropagation(); initAudio(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🥩"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1000); updateUI(); save(); }
 function cleanPet(e) { e.stopPropagation(); if(!pet || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 15); spawnPop("🫧"); updateUI(); save(); }
 function playPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; if(pet.stats.energy < 15) { spawnPop("💤"); return; } pet.stats.energy -= 15; pet.stats.xp += 20; if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; spawnPop("🆙"); display(pet); } spawnPop("⚽️"); updateUI(); save(); }
 function doctorPet(e) { e.stopPropagation(); if(!pet) return; if(pet.stats.health <= 0) { pet.stats.health = 50; display(pet); spawnPop("💖"); } else { pet.stats.health = Math.min(100, pet.stats.health + 30); spawnPop("🩺"); } updateUI(); save(); }
-function toggleSleep(e) { e.stopPropagation(); if(!pet || pet.stats.health <= 0) return; isSleeping = !isSleeping; document.getElementById('night-overlay').style.opacity = isSleeping ? "1" : "0"; if (gainNode) { const v = isSleeping ? 0.1 : 0.4; gainNode.gain.setTargetAtTime(v, audioCtx.currentTime, 1.5); } spawnPop(isSleeping ? "🌖" : "☀️"); }
+
+function toggleSleep(e) { 
+  e.stopPropagation(); 
+  if(!pet || pet.stats.health <= 0) return; 
+  isSleeping = !isSleeping; 
+  document.getElementById('night-overlay').style.opacity = isSleeping ? "1" : "0"; 
+  if (gainNode) { 
+    const v = isSleeping ? 0.05 : 0.4; // Night is very quiet
+    gainNode.gain.setTargetAtTime(v, audioCtx.currentTime, 1.5); 
+  } 
+  spawnPop(isSleeping ? "🌖" : "☀️"); 
+}
 
 // --- SYSTEM ---
 function display(data){
@@ -267,6 +325,7 @@ function display(data){
 function updateUI(){ if(!pet) return; const s=pet.stats; document.getElementById("sn").innerHTML=`<b>${pet.name}</b>`; document.getElementById("sh").innerText=`H:${Math.round(s.hunger)}%`; document.getElementById("se").innerText=`E:${Math.round(s.energy)}%`; document.getElementById("shp").innerText=`HP:${Math.round(s.health)}%`; }
 async function save(){ if(pet?.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); }
 function toggleMenu(e){ e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = (m.style.display==='flex')?'none':'flex'; }
+
 async function createPet(){
   const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
   const res = await db.collection("pets").add({name:n,species:s,lastUpdated:Date.now(),stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
@@ -275,17 +334,6 @@ async function createPet(){
 }
 function spawnPop(t){ const p=document.createElement("div"); p.className="pop"; p.innerText=t; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
 function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕"); save(); }}
-
-// --- AUDIO ---
-async function initAudio() {
-  if(audioCtx) return; audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  gainNode = audioCtx.createGain(); gainNode.connect(audioCtx.destination);
-  const res = await fetch('happy-day.mp3'); const ab = await res.arrayBuffer();
-  const buffer = await audioCtx.decodeAudioData(ab);
-  const source = audioCtx.createBufferSource(); source.buffer = buffer; source.loop = true;
-  source.connect(gainNode); source.start(0); gainNode.gain.value = 0.4;
-}
-function setVol(val,e){ e.stopPropagation(); initAudio(); if(audioCtx.state==='suspended') audioCtx.resume(); gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2); }
 
 // --- WEATHER ---
 function toggleWeather() {
@@ -309,5 +357,6 @@ setInterval(toggleWeather, 40000);
 // Start
 db.collection("pets").orderBy("lastUpdated","desc").limit(1).get().then(s=>{if(!s.empty) display({id:s.docs[0].id,...s.docs[0].data()});});
 </script>
+
 </body>
 </html>
