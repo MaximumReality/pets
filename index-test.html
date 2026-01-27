@@ -3,22 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Reality Pets: Atmospheric Legends</title>
+<title>Reality Pets: Stormy Wind</title>
 <style>
 :root { 
   --glass: rgba(0, 0, 0, 0.85); 
   --gold: #ffcc00;
-  --safe-top: env(safe-area-inset-top, 59px); 
-  --safe-bottom: env(safe-area-inset-bottom, 50px);
+  --safe-top: env(safe-area-inset-top, 20px); 
+  /* Push bar up from the bottom URL/Home area */
+  --safe-bottom: env(safe-area-inset-bottom, 30px);
 }
 
 body {
   margin: 0; font-family: -apple-system, sans-serif;
   background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
   background-size: cover; color: #fff; 
-  height: 100vh; overflow: hidden; position: fixed; width: 100%;
+  height: 100vh; width: 100%;
+  overflow: hidden; position: fixed; /* KILLS SCROLLING */
   touch-action: manipulation;
+  transition: filter 2s;
 }
+
+/* STORM FILTERS */
+body.is-stormy { filter: brightness(0.5) contrast(1.2) saturate(0.7) hue-rotate(190deg); }
 
 /* FULL SCREEN EFFECTS */
 #night-overlay {
@@ -33,16 +39,30 @@ body {
 .do-flash { animation: lightningStrike 0.15s ease-out; }
 @keyframes lightningStrike { 0% { opacity: 1; } 100% { opacity: 0; } }
 
-/* WEATHER & MESSES */
-#weather-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+/* WIND & WEATHER */
+#weather-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: transform 2s; }
 .rain-drop { position: absolute; background: #4fa1ff; width: 2px; height: 15px; opacity: 0.6; animation: rainFall 0.8s linear infinite; }
-@keyframes rainFall { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
-.mess { position: absolute; font-size: 28px; z-index: 6; pointer-events: none; transition: opacity 0.5s; }
+@keyframes rainFall { 0% { transform: translateY(-100px); } 100% { transform: translateY(110vh); } }
+
+/* Wind Tilt: Apply when is-stormy is active */
+body.is-stormy .rain-drop { transform: rotate(15deg); }
+body.is-stormy #game-world { transform: rotate(5deg) translateX(10px); transition: transform 2s; }
 
 /* HUD */
 #hud-container { position: absolute; top: calc(var(--safe-top) + 10px); left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; }
 .hud-bar { background: var(--glass); padding: 8px 15px; border-radius: 25px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 15px; }
 #statsBox { display: flex; gap: 10px; font-size: 11px; font-weight: bold; }
+
+/* UI FIX: Move Bar above Safari URL/Home Bar */
+.action-bar { 
+  position: absolute; 
+  bottom: calc(var(--safe-bottom) + 20px); 
+  left: 50%; transform: translateX(-50%); 
+  display: flex; gap: 12px; z-index: 10000; 
+  background: rgba(0,0,0,0.8); padding: 12px 18px; border-radius: 35px; 
+  backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
+}
+.action-bar button { background: #222; border: 1px solid #444; color: white; border-radius: 50%; width: 54px; height: 54px; font-size: 26px; }
 
 /* TABBED MENU */
 #createMenu {
@@ -55,21 +75,16 @@ body {
 .tab-btn.active { border-bottom: 2px solid var(--gold); color: var(--gold); }
 .menu-content { padding: 15px; max-height: 250px; overflow-y: auto; }
 
-/* PET & EFFECTS */
-#game-world { position: absolute; z-index: 50; transition: all 0.8s ease; text-align: center; }
+/* PET */
+#game-world { position: absolute; z-index: 50; transition: all 0.8s ease; text-align: center; left: 50%; bottom: 32%; }
 .pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
 .wander { animation: wander 14s linear infinite alternate; }
 @keyframes wander { 0% { transform: translate(-60px, 0); } 100% { transform: translate(60px, 0); } }
 
-.food-drop { position: absolute; font-size: 45px; z-index: 50; animation: fall 1.2s ease-in forwards; }
-@keyframes fall { 0% { transform: translateY(-50px); opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }
 .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 10001; pointer-events: none; }
 @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
-
-.action-bar { position: absolute; bottom: calc(var(--safe-bottom) + 35px); left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10000; background: rgba(0,0,0,0.7); padding: 12px 18px; border-radius: 35px; backdrop-filter: blur(20px); }
-.action-bar button { background: #222; border: 1px solid #444; color: white; border-radius: 50%; width: 54px; height: 54px; font-size: 26px; }
-
-.hof-entry { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+.food-drop { position: absolute; font-size: 45px; z-index: 50; animation: fall 1.2s ease-in forwards; }
+@keyframes fall { 0% { transform: translateY(-50px); opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }
 </style>
 </head>
 <body onclick="handlePetting(event)">
@@ -140,21 +155,18 @@ const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"�
 // --- ACTIONS ---
 function feedPet(e) {
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
-  pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); // Decrease hunger
+  pet.stats.hunger = Math.max(0, pet.stats.hunger - 25);
   const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🍎";
   f.style.left = "50%"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
-  updateUI(); // Refresh screen immediately
-  save();
+  updateUI(); save();
 }
 
 function cleanPet(e) {
   e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
   pet.stats.health = Math.min(100, pet.stats.health + 10);
-  document.querySelectorAll('.mess').forEach(m => m.style.opacity = '0');
-  setTimeout(() => document.getElementById('messes').innerHTML = '', 500);
+  document.getElementById('messes').innerHTML = '';
   spawnPop("🫧", window.innerWidth/2, window.innerHeight/2);
-  updateUI();
-  save();
+  updateUI(); save();
 }
 
 function playPet(e) {
@@ -163,9 +175,7 @@ function playPet(e) {
   pet.stats.energy = Math.max(0, pet.stats.energy - 15);
   pet.stats.xp += 20;
   spawnPop("⚽️ XP++", window.innerWidth/2, window.innerHeight/2);
-  checkLevelUp();
-  updateUI();
-  save();
+  checkLevelUp(); updateUI(); save();
 }
 
 function doctorPet(e) {
@@ -173,67 +183,56 @@ function doctorPet(e) {
   pet.stats.health = Math.min(100, pet.stats.health + 30);
   triggerFlash();
   spawnPop("🩺", window.innerWidth/2, window.innerHeight/2);
-  updateUI();
-  save();
+  updateUI(); save();
 }
 
 function checkLevelUp() {
-  if(pet.stats.xp >= 100) {
-    pet.stats.level++; pet.stats.xp = 0;
-    spawnPop("✨ LEVEL UP", window.innerWidth/2, 150);
-    display(pet);
-  }
+  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); }
 }
 
-// --- SURVIVAL LOOP (The Heartbeat) ---
+// --- SURVIVAL ---
 function gameHeartbeat() {
   if (!pet || pet.stats.health <= 0) return;
-
   if (isSleeping) {
-    // RECHARGE ENERGY while in the dark
     pet.stats.energy = Math.min(100, pet.stats.energy + 10);
     spawnPop("💤", window.innerWidth/2, window.innerHeight/2);
   } else {
-    // DRAIN energy and INCREASE hunger while awake
     pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
     pet.stats.energy = Math.max(0, pet.stats.energy - 1);
-
-    // If starving or exhausted, lose health
-    if (pet.stats.hunger > 95 || pet.stats.energy <= 0) {
-      pet.stats.health = Math.max(0, pet.stats.health - 2);
-    }
+    if (pet.stats.hunger > 95 || pet.stats.energy <= 0) pet.stats.health = Math.max(0, pet.stats.health - 2);
   }
-  updateUI(); // Keeps the numbers moving on screen
-  save();
+  updateUI(); save();
 }
-setInterval(gameHeartbeat, 5000); // Runs every 5 seconds
+setInterval(gameHeartbeat, 5000);
 
-// --- WEATHER & AUDIO ---
-function triggerFlash() {
-  const flashLayer = document.getElementById('flash-layer');
-  flashLayer.classList.add('do-flash');
-  setTimeout(() => flashLayer.classList.remove('do-flash'), 150);
-}
-
+// --- WEATHER & WIND ---
 function toggleWeather() {
   const layer = document.getElementById('weather-layer');
-  isRaining = Math.random() < 0.3;
+  isRaining = Math.random() < 0.4;
   layer.innerHTML = '';
   if(isRaining) {
-    for(let i=0; i<30; i++) {
+    document.body.classList.add('is-stormy');
+    for(let i=0; i<40; i++) {
       const drop = document.createElement('div');
       drop.className = 'rain-drop'; drop.style.left = Math.random() * 100 + '%'; drop.style.animationDelay = Math.random() * 2 + 's';
       layer.appendChild(drop);
     }
     triggerLightningLoop();
+  } else {
+    document.body.classList.remove('is-stormy');
   }
 }
 function triggerLightningLoop() {
   if(!isRaining) return;
   setTimeout(() => { triggerFlash(); if(Math.random() > 0.7) triggerLightningLoop(); }, Math.random() * 10000 + 5000);
 }
+function triggerFlash() {
+  const fl = document.getElementById('flash-layer');
+  fl.classList.add('do-flash'); setTimeout(() => fl.classList.remove('do-flash'), 150);
+}
 setInterval(toggleWeather, 30000);
 
+// --- CORE ---
 async function initAudio() {
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -244,32 +243,17 @@ async function initAudio() {
   musicSource.connect(gainNode); musicSource.start(0);
   gainNode.gain.value = 0.4;
 }
-
 function setVol(val,e){ e.stopPropagation(); if(!audioCtx) initAudio(); if(audioCtx.state==='suspended') audioCtx.resume(); gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2); }
 
 function toggleSleep(e) {
   e.stopPropagation(); isSleeping = !isSleeping;
-  const overlay = document.getElementById('night-overlay');
-  overlay.style.opacity = isSleeping ? "1" : "0";
+  document.getElementById('night-overlay').style.opacity = isSleeping ? "1" : "0";
   if(gainNode) gainNode.gain.setTargetAtTime(isSleeping ? 0.05 : 0.4, audioCtx.currentTime, 1.5);
-  updateUI();
-  save();
-}
-
-// --- MENU & FIREBASE ---
-function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; if(m.style.display==='block') fetchHOF(); }
-function switchTab(t) {
-  ['helpTab','hofTab','adoptTab'].forEach(id => document.getElementById(id).style.display = id.startsWith(t) ? 'block' : 'none');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(t)));
-}
-async function fetchHOF() {
-  const snap = await db.collection("pets").orderBy("stats.level", "desc").limit(5).get();
-  document.getElementById('hofList').innerHTML = snap.docs.map(d => `<div class="hof-entry"><span>${emojiMap[d.data().species]||'🐾'} ${d.data().name}</span><b>Lv.${d.data().stats.level}</b></div>`).join('');
+  updateUI(); save();
 }
 
 function display(data){
   pet = data; const world = document.getElementById("game-world");
-  world.style.left="50%"; world.style.bottom="32%";
   world.classList.toggle("wander", pet.stats.health > 0 && !isSleeping);
   world.innerHTML = `<img src="${pet.species}.png" class="pet-img" style="width:${80+(pet.stats.level*5)}px">`;
   updateUI();
@@ -284,7 +268,15 @@ function updateUI(){
 async function save(){ if(pet?.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); }
 function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕", e.clientX, e.clientY); checkLevelUp(); save(); }}
 function spawnPop(t,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=t; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
-
+function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; if(m.style.display==='block') fetchHOF(); }
+function switchTab(t) {
+  ['helpTab','hofTab','adoptTab'].forEach(id => document.getElementById(id).style.display = id.startsWith(t) ? 'block' : 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(t)));
+}
+async function fetchHOF() {
+  const snap = await db.collection("pets").orderBy("stats.level", "desc").limit(5).get();
+  document.getElementById('hofList').innerHTML = snap.docs.map(d => `<div class="hof-entry"><span>${emojiMap[d.data().species]||'🐾'} ${d.data().name}</span><b>Lv.${d.data().stats.level}</b></div>`).join('');
+}
 async function createPet(){
   const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
   const res = await db.collection("pets").add({name:n,species:s,lastUpdated:Date.now(),stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
@@ -296,7 +288,6 @@ async function fetchPet(){
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
 fetchPet();
-
 </script>
 </body>
 </html>
