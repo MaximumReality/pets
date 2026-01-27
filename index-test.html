@@ -80,6 +80,8 @@ html, body {
 }
 .saving { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 .mess { position:absolute; font-size:28px; z-index:6; cursor:pointer; }
+.rain-drop { position:absolute; background:#4fa1ff; width:2px; height:15px; opacity:0.6; animation:rainFall 0.8s linear infinite; }
+@keyframes rainFall { 0%{transform:translateY(-100px);} 100%{transform:translateY(100vh);} }
 </style>
 </head>
 <body onclick="handlePetting(event)">
@@ -135,12 +137,93 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let pet=null, isSleeping=false, isRaining=false;
-let audioCtx, gainNode;
+let audioCtx, musicGain, rainGain, musicBuffer, rainBuffer, musicSource, rainSource;
 const foodMap={bunny:"🥕",fox:"🍔",dog:"🥩",dragon:"🍖",cat:"🐠",unicorn:"🍎",frog:"🪰"};
 const reactMap={bunny:"🐰",fox:"🦊",dog:"🐕",cat:"😼",frog:"🐸",dragon:"🔥",unicorn:"✨"};
 const petPositions={frog:{left:"25%",bottom:"25%"},bunny:{left:"65%",bottom:"28%"},fox:{left:"55%",bottom:"30%"},dog:{left:"50%",bottom:"32%"},cat:{left:"45%",bottom:"34%"},unicorn:{left:"70%",bottom:"36%"},dragon:{left:"50%",bottom:"60%"}};
 
-// HEARTBEAT (THE BRAIN)
+// --- AUDIO ENGINE ---
+async function loadSound(url) {
+  try {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    return await audioCtx.decodeAudioData(arrayBuffer);
+  } catch(e) { console.log("Sound load failed: " + url); return null; }
+}
+
+async function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  musicGain = audioCtx.createGain();
+  rainGain = audioCtx.createGain();
+  musicGain.connect(audioCtx.destination);
+  rainGain.connect(audioCtx.destination);
+  
+  musicBuffer = await loadSound('happy-day.mp3');
+  rainBuffer = await loadSound('rain-thunder.mp3');
+  
+  if (musicBuffer) {
+    musicSource = audioCtx.createBufferSource();
+    musicSource.buffer = musicBuffer;
+    musicSource.loop = true;
+    musicSource.connect(musicGain);
+    musicSource.start(0);
+    musicGain.gain.value = 0.4;
+  }
+  
+  if (rainBuffer) {
+    rainSource = audioCtx.createBufferSource();
+    rainSource.buffer = rainBuffer;
+    rainSource.loop = true;
+    rainSource.connect(rainGain);
+    rainSource.start(0);
+    rainGain.gain.value = 0;
+  }
+}
+
+function setVol(val, e) {
+  if (e) e.stopPropagation();
+  if (!audioCtx) {
+    initAudio().then(() => { if(audioCtx.state === 'suspended') audioCtx.resume(); });
+  } else {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    musicGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2);
+  }
+}
+
+// --- WEATHER & HEARTBEAT ---
+function toggleWeather() {
+  const layer = document.getElementById('weather-layer');
+  layer.innerHTML = '';
+  isRaining = Math.random() < 0.4; 
+  if (isRaining) {
+    if (rainGain) rainGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 2);
+    for (let i = 0; i < 30; i++) {
+      const drop = document.createElement('div');
+      drop.className = 'rain-drop';
+      drop.style.left = Math.random() * 100 + '%';
+      drop.style.animationDelay = Math.random() * 2 + 's';
+      layer.appendChild(drop);
+    }
+    triggerLightning();
+    spawnPop("⛈️", window.innerWidth/2, 100);
+  } else {
+    if (rainGain) rainGain.gain.setTargetAtTime(0, audioCtx.currentTime, 2);
+  }
+}
+
+function triggerLightning() {
+  if (!isRaining) return;
+  setTimeout(() => {
+    if (isRaining) {
+      document.body.classList.add('flash');
+      setTimeout(() => document.body.classList.remove('flash'), 150);
+      triggerLightning();
+    }
+  }, Math.random() * 8000 + 3000);
+}
+setInterval(toggleWeather, 45000);
+
 function gameHeartbeat() {
   if (!pet || pet.stats.health <= 0) return;
   if (isSleeping) {
@@ -149,25 +232,14 @@ function gameHeartbeat() {
   } else {
     pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
     pet.stats.energy = Math.max(0, pet.stats.energy - 1);
-    // If starving or exhausted, lose health
-    if (pet.stats.hunger > 90 || pet.stats.energy < 5) {
-      pet.stats.health = Math.max(0, pet.stats.health - 2);
-    }
+    if (pet.stats.hunger > 90 || pet.stats.energy < 5) pet.stats.health = Math.max(0, pet.stats.health - 2);
     if (pet.stats.hunger > 75 && Math.random() > 0.8) spawnMess();
   }
   save();
 }
 setInterval(gameHeartbeat, 5000);
 
-function checkLevelUp() {
-  if(!pet) return;
-  if(pet.stats.xp >= 100) {
-    pet.stats.level++;
-    pet.stats.xp = 0;
-    spawnPop("✨ LEVEL UP!", window.innerWidth/2, 150);
-  }
-}
-
+// --- REST OF ACTIONS ---
 async function save(){ 
   if(pet && pet.id) {
     document.getElementById('statsBox').classList.add('saving');
@@ -186,14 +258,17 @@ function updateUI(){
   document.getElementById("resBtn").style.display = (s.health <= 0) ? "block" : "none";
 }
 
-// PET ACTIONS
 function feedPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 25); spawnPop(foodMap[pet.species] || "🍎", window.innerWidth/2, window.innerHeight/2); save(); }
 function playPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; if(pet.stats.energy < 15) { spawnPop("💤", window.innerWidth/2, 200); return; } pet.stats.energy = Math.max(0, pet.stats.energy - 10); pet.stats.xp += 30; spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2); checkLevelUp(); save(); }
 function cleanPet(e){ e.stopPropagation(); if(!pet || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 15); document.getElementById('messes').innerHTML = ''; spawnPop("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
 function doctorPet(e){ e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 30); spawnPop("🩺", window.innerWidth/2, window.innerHeight/2); save(); }
 async function resurrectPet(e){ e.stopPropagation(); if(!pet || pet.stats.health > 0) return; pet.stats.health = 50; pet.stats.hunger = 50; pet.stats.energy = 50; save(); display(pet); }
 
-// VISUALS
+function checkLevelUp() {
+  if(!pet) return;
+  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; spawnPop("✨ LEVEL UP!", window.innerWidth/2, 150); }
+}
+
 function toggleSleep(e){ e.stopPropagation(); isSleeping = !isSleeping; document.body.classList.toggle('night-mode', isSleeping); isSleeping ? spawnStars() : removeStars(); save(); }
 function spawnStars() {
   const field = document.getElementById('star-field');
@@ -225,8 +300,6 @@ function display(data){
   updateUI();
 }
 
-// UTILS
-function setVol(val, e) { if (e) e.stopPropagation(); if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 function spawnPop(txt,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=txt; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
 function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
 
