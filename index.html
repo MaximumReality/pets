@@ -3,116 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Reality Pets: Fixed Pro</title>
+  <title>Reality Pets: Final Fix</title>
   <style>
     :root { 
       --glass: rgba(0, 0, 0, 0.85); 
       --gold: #ffcc00;
-      --safe-top: env(safe-area-inset-top, 44px); 
+      --safe-top: env(safe-area-inset-top, 50px); 
     }
     
     body {
       margin: 0; font-family: -apple-system, sans-serif;
       background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
       background-size: cover; color: #fff; overflow: hidden; height: 100vh;
-      position: fixed; width: 100%;
-      /* STOPS the "typing/selection" reaction on tap */
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    /* Fixed UI Layer */
-    .ui-layer {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 100;
-      pointer-events: none; /* Let clicks pass through BY DEFAULT */
+      -webkit-user-select: none; user-select: none;
     }
 
     /* Stats - Pushed down to clear Dynamic Island */
-    .stats-mini {
-      position: absolute; 
-      top: calc(var(--safe-top) + 15px); 
-      right: 15px;
-      background: var(--glass); padding: 12px; border-radius: 18px;
-      font-size: 11px; backdrop-filter: blur(15px);
-      border: 1px solid rgba(255,255,255,0.1);
-      pointer-events: auto; /* ALLOW clicks here */
+    #statsBox {
+      position: absolute; top: calc(var(--safe-top) + 10px); right: 15px;
+      background: var(--glass); padding: 10px; border-radius: 15px;
+      font-size: 11px; backdrop-filter: blur(10px); z-index: 1000;
+      border: 1px solid rgba(255,255,255,0.1); width: 130px;
     }
 
     .menu-wrap { 
-      position: absolute; 
-      top: calc(var(--safe-top) + 15px); 
-      left: 15px; 
-      pointer-events: auto; /* ALLOW clicks here */
+      position: absolute; top: calc(var(--safe-top) + 10px); left: 15px; 
+      z-index: 1000;
     }
 
-    /* Action Bar - Fixed Pointer Events */
+    /* Action Bar - Solid Z-Index and Flex */
     .action-bar {
       position: absolute; bottom: env(safe-area-inset-bottom, 30px);
       left: 50%; transform: translateX(-50%);
-      display: flex; gap: 10px; 
-      background: rgba(255,255,255,0.1); padding: 10px; border-radius: 25px;
+      display: flex; gap: 12px; z-index: 1000;
+      background: rgba(0,0,0,0.6); padding: 12px; border-radius: 30px;
       backdrop-filter: blur(15px);
-      pointer-events: auto; /* ALLOW clicks here */
     }
 
     .action-bar button {
-      background: var(--glass); border: 1px solid rgba(255,255,255,0.2);
-      color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 22px;
+      background: #333; border: 1px solid #555;
+      color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 24px;
       display: flex; align-items: center; justify-content: center;
     }
 
     /* Pet Logic */
-    .pet-stage { position: absolute; transition: all 0.8s ease; z-index: 5; }
-    .pet-img { filter: drop-shadow(0 0 15px rgba(255,255,255,0.35)); cursor: pointer; }
+    #game-world { position: absolute; z-index: 5; transition: all 0.8s ease; }
+    .pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
+    
     .wander { animation: wander 14s linear infinite alternate; }
-    @keyframes wander { 0% { transform: translateX(-80px); } 100% { transform: translateX(80px); } }
+    @keyframes wander { 0% { transform: translate(-80px, 0); } 100% { transform: translate(80px, 0); } }
+    
     .react { animation: react 0.4s ease-out; }
-    @keyframes react { 0% { transform: scale(1); } 40% { transform: scale(1.15); } 100% { transform: scale(1); } }
-    .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 20px cyan) !important; }
+    @keyframes react { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    
+    .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 15px cyan) !important; }
 
-    .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; pointer-events: none; z-index: 200; }
-    @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
+    /* Falling Food Animation */
+    .food-drop {
+      position: absolute; font-size: 40px; z-index: 100;
+      animation: fall 1.5s ease-in forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(600px) rotate(360deg); opacity: 0; }
+    }
+
+    .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 2000; pointer-events: none; }
+    @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
   </style>
 </head>
 <body onclick="handlePetting(event)">
 
-  <div class="ui-layer">
-    <div class="menu-wrap">
-      <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; padding:10px; font-size:20px;">⚙️</button>
-      <div id="createMenu" style="display:none; background:var(--glass); padding:15px; border-radius:15px; margin-top:10px; width:150px;">
-        <input id="petName" placeholder="Name" style="width:100%; margin-bottom:5px;">
-        <select id="petSpecies" style="width:100%; margin-bottom:5px;">
-          <option value="bunny">Bunny</option><option value="fox">Fox</option>
-          <option value="dog">Dog</option><option value="dragon">Dragon</option>
-          <option value="cat">Cat</option><option value="unicorn">Unicorn</option>
-          <option value="frog">Frog</option>
-        </select>
-        <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:8px; border-radius:5px;">Adopt</button>
-      </div>
-    </div>
-
-    <div class="stats-mini" id="statsBox">
-      <div id="sn"><b>Adopt a Pet!</b></div>
-      <div id="sh">Hunger: —</div>
-      <div id="se">Energy: —</div>
-      <div id="shp">Health: —</div>
-      <div id="sl">Level: —</div>
-    </div>
-
-    <div class="action-bar">
-      <button onclick="feedPet()">🍎</button>
-      <button onclick="cleanPet()">🧽</button>
-      <button onclick="playPet()">⚽️</button>
-      <button onclick="doctorPet()">🩺</button>
-      <button id="resBtn" onclick="resurrectPet()" style="display:none; background:var(--gold);">⚡️</button>
-      <button onclick="toggleSleep()">🌙</button>
+  <div class="menu-wrap">
+    <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; width:44px; height:44px; font-size:20px;">⚙️</button>
+    <div id="createMenu" style="display:none; background:var(--glass); padding:15px; border-radius:15px; margin-top:10px; width:160px;">
+      <input id="petName" placeholder="Name" style="width:90%; margin-bottom:5px; padding:5px;">
+      <select id="petSpecies" style="width:98%; margin-bottom:5px; padding:5px;">
+        <option value="bunny">Bunny (🥕)</option>
+        <option value="fox">Fox (🍔)</option>
+        <option value="dog">Dog (🥩)</option>
+        <option value="dragon">Dragon (🍖)</option>
+        <option value="cat">Cat (🐠)</option>
+        <option value="unicorn">Unicorn (🍎)</option>
+        <option value="frog">Frog (🪰)</option>
+      </select>
+      <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold;">ADOPT</button>
     </div>
   </div>
 
-  <div id="game-world" class="pet-stage"></div>
+  <div id="statsBox">
+    <div id="sn"><b>Adopt a Pet!</b></div>
+    <div id="sh">Hunger: —</div>
+    <div id="se">Energy: —</div>
+    <div id="shp">Health: —</div>
+    <div id="sl">Level: —</div>
+  </div>
+
+  <div id="game-world"></div>
+
+  <div class="action-bar">
+    <button onclick="feedPet(event)">🍎</button>
+    <button onclick="cleanPet(event)">🧽</button>
+    <button onclick="playPet(event)">⚽️</button>
+    <button onclick="doctorPet(event)">🩺</button>
+    <button id="resBtn" onclick="resurrectPet(event)" style="display:none; background:var(--gold);">⚡️</button>
+    <button onclick="toggleSleep(event)">🌙</button>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -149,13 +145,33 @@
       if (e.target.classList.contains('pet-img')) {
         e.target.classList.remove("react"); void e.target.offsetWidth; e.target.classList.add("react");
         pet.stats.xp = (pet.stats.xp || 0) + 5;
-        spawnEffect(reactMap[pet.species] || "💕", e.clientX, e.clientY);
+        spawnPop(reactMap[pet.species] || "💕", e.clientX, e.clientY);
         checkGrowth(); save();
       }
     }
 
+    function feedPet(e) { 
+      e.stopPropagation(); 
+      if(!pet || isSleeping || pet.stats.health <= 0) return; 
+      pet.stats.hunger = Math.max(0, pet.stats.hunger - 20); 
+      // Drop food from top
+      const food = document.createElement("div");
+      food.className = "food-drop";
+      food.innerText = foodMap[pet.species];
+      food.style.left = "50%";
+      document.body.appendChild(food);
+      setTimeout(() => food.remove(), 1500);
+      save(); 
+    }
+
+    function cleanPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 10); spawnPop("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
+    function playPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.energy = Math.max(0, pet.stats.energy - 15); spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2); save(); }
+    function doctorPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
+    function resurrectPet(e) { e.stopPropagation(); pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
+    function toggleSleep(e) { e.stopPropagation(); isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
+
     function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-    function spawnEffect(txt, x, y) {
+    function spawnPop(txt, x, y) {
       const p = document.createElement("div"); p.className = "pop"; p.innerText = txt;
       p.style.left = x + "px"; p.style.top = y + "px";
       document.body.appendChild(p); setTimeout(() => p.remove(), 1200);
@@ -172,13 +188,6 @@
     async function save() { await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: Date.now() }); updateUI(); }
     function checkGrowth() { if (pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); } }
     
-    function feedPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.hunger = Math.max(0, pet.stats.hunger - 20); spawnEffect(foodMap[pet.species], window.innerWidth/2, window.innerHeight/2); save(); }
-    function cleanPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 10); spawnEffect("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
-    function playPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.energy = Math.max(0, pet.stats.energy - 15); spawnEffect("⚽️", window.innerWidth/2, window.innerHeight/2); save(); }
-    function doctorPet() { if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
-    function resurrectPet() { pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
-    function toggleSleep() { isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
-
     async function createPet() {
       const n = document.getElementById("petName").value;
       const s = document.getElementById("petSpecies").value;
