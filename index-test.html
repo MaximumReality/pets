@@ -147,72 +147,114 @@ select, input { width: 90%; background: #333; color: white; border: 1px solid #5
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <script>
+// --- DATABASE & CONFIG ---
 const firebaseConfig = { apiKey:"AIzaSyDkpW7RAmX0wPmL757_GzEFIoU6snssLnA", authDomain:"pets-86c25.firebaseapp.com", projectId:"pets-86c25", storageBucket:"pets-86c25.firebasestorage.app", messagingSenderId:"556129222317", appId:"1:556129222d59024" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let pet = null, isSleeping = false, isRaining = false;
-let audioCtx, gainNode, musicSource;
+let audioCtx, gainNode;
 const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎" };
-const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"🐱", unicorn:"🦄" };
+
+// --- SURVIVAL ENGINE (The Heartbeat) ---
+function gameHeartbeat() {
+  if (!pet) return;
+
+  const world = document.getElementById("game-world");
+
+  // 1. DEATH & GHOST CHECK
+  if (pet.stats.health <= 0) {
+    pet.stats.health = 0;
+    world.classList.remove("wander");
+    world.innerHTML = `<div style="font-size:80px; filter:grayscale(1) opacity(0.7);">👻</div><div style="font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:10px;">RIP ${pet.name}</div>`;
+    updateUI();
+    return;
+  }
+
+  // 2. SLEEP & ENERGY
+  if (isSleeping) {
+    pet.stats.energy = Math.min(100, pet.stats.energy + 10); // Gain energy
+    spawnPop("💤");
+  } else {
+    // Normal Drain
+    pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
+    pet.stats.energy = Math.max(0, pet.stats.energy - 1);
+
+    // Starvation/Fatigue Damage
+    if (pet.stats.hunger > 90 || pet.stats.energy <= 0) {
+      pet.stats.health = Math.max(0, pet.stats.health - 3);
+    }
+  }
+  updateUI();
+  save();
+}
+setInterval(gameHeartbeat, 5000);
+
+// --- WEATHER & STORMS ---
+function toggleWeather() {
+  const layer = document.getElementById('weather-layer');
+  isRaining = Math.random() < 0.3; // 30% chance
+  layer.innerHTML = '';
+  
+  if(isRaining) {
+    document.body.classList.add('is-stormy');
+    for(let i=0; i<35; i++) {
+      const drop = document.createElement('div');
+      drop.className = 'rain-drop'; 
+      drop.style.left = Math.random() * 100 + '%'; 
+      drop.style.animationDelay = Math.random() * 2 + 's';
+      layer.appendChild(drop);
+    }
+    triggerLightning();
+  } else {
+    document.body.classList.remove('is-stormy');
+  }
+}
+function triggerLightning() {
+  if(!isRaining) return;
+  const fl = document.getElementById('flash-layer');
+  fl.classList.add('do-flash');
+  setTimeout(() => fl.classList.remove('do-flash'), 150);
+  setTimeout(triggerLightning, Math.random() * 8000 + 4000);
+}
+setInterval(toggleWeather, 40000);
 
 // --- ACTIONS ---
+function toggleSleep(e) {
+  e.stopPropagation();
+  if(!pet || pet.stats.health <= 0) return;
+  isSleeping = !isSleeping;
+  document.getElementById('night-overlay').style.opacity = isSleeping ? "1" : "0";
+  spawnPop(isSleeping ? "🌖" : "☀️");
+  updateUI();
+}
+
 function feedPet(e) {
   e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
   pet.stats.hunger = Math.max(0, pet.stats.hunger - 25);
   const f = document.createElement("div"); f.className = "food-drop"; 
-  f.innerText = foodMap[pet.species] || "🍎";
+  f.innerText = foodMap[pet.species] || "🥩";
   document.body.appendChild(f); setTimeout(()=>f.remove(), 1000);
   updateUI(); save();
 }
 
-function toggleSleep(e) {
-  e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
-  isSleeping = !isSleeping;
-  document.getElementById('night-overlay').style.opacity = isSleeping ? "1" : "0";
-  if(gainNode) gainNode.gain.setTargetAtTime(isSleeping ? 0.05 : 0.4, audioCtx.currentTime, 1.5);
-  updateUI(); save();
-}
-
-function cleanPet(e) {
-  e.stopPropagation(); if(!pet) return;
-  pet.stats.health = Math.min(100, pet.stats.health + 10);
-  document.getElementById('messes').innerHTML = '';
-  spawnPop("🫧"); updateUI(); save();
-}
-
-function playPet(e) {
-  e.stopPropagation(); if(!pet || isSleeping || pet.stats.energy < 15) { spawnPop("💤"); return; }
-  pet.stats.energy -= 15; pet.stats.xp += 20;
-  if(pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); }
-  spawnPop("⚽️"); updateUI(); save();
-}
-
 function doctorPet(e) {
   e.stopPropagation(); if(!pet) return;
-  pet.stats.health = Math.min(100, pet.stats.health + 30);
-  const fl = document.getElementById('flash-layer');
-  fl.classList.add('do-flash'); setTimeout(() => fl.classList.remove('do-flash'), 150);
-  spawnPop("🩺"); updateUI(); save();
-}
-
-// --- ENGINE ---
-function gameHeartbeat() {
-  if (!pet || pet.stats.health <= 0) return;
-  if (isSleeping) {
-    pet.stats.energy = Math.min(100, pet.stats.energy + 8);
-    spawnPop("Zzz");
+  if(pet.stats.health <= 0) {
+    pet.stats.health = 40; // Resurrection!
+    display(pet); // Re-render from ghost to pet
+    spawnPop("✨ REVIVED");
   } else {
-    pet.stats.hunger = Math.min(100, pet.stats.hunger + 2);
-    pet.stats.energy = Math.max(0, pet.stats.energy - 1);
-    if(pet.stats.hunger > 95 || pet.stats.energy <= 0) pet.stats.health -= 2;
+    pet.stats.health = Math.min(100, pet.stats.health + 30);
+    spawnPop("🩺");
   }
   updateUI(); save();
 }
-setInterval(gameHeartbeat, 5000);
 
+// --- DISPLAY & UI ---
 function display(data){
-  pet = data; const world = document.getElementById("game-world");
+  pet = data; 
+  const world = document.getElementById("game-world");
   world.classList.toggle("wander", pet.stats.health > 0 && !isSleeping);
   world.innerHTML = `<img src="${pet.species}.png" class="pet-img" style="width:${100+(pet.stats.level*5)}px">`;
   updateUI();
@@ -226,15 +268,11 @@ function updateUI(){
   document.getElementById("shp").innerText=`HP:${Math.round(s.health)}%`;
 }
 
+// --- SYSTEM ---
 async function save(){ if(pet?.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); }
-
 function spawnPop(t){ const p=document.createElement("div"); p.className="pop"; p.innerText=t; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
-
 function toggleMenu(e){ e.stopPropagation(); const m=document.getElementById('createMenu'); m.style.display=(m.style.display==='block')?'none':'block'; }
-
-function switchTab(t) {
-  ['helpTab','hofTab','adoptTab'].forEach(id => document.getElementById(id).style.display = id.startsWith(t) ? 'block' : 'none');
-}
+function switchTab(t) { ['helpTab','hofTab','adoptTab'].forEach(id => document.getElementById(id).style.display = id.startsWith(t) ? 'block' : 'none'); }
 
 async function createPet(){
   const n=document.getElementById("petName").value; const s=document.getElementById("petSpecies").value; if(!n) return;
@@ -247,20 +285,8 @@ async function fetchPet(){
   const snap=await db.collection("pets").orderBy("lastUpdated","desc").limit(1).get();
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
-
-async function initAudio() {
-  if(audioCtx) return; audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  gainNode = audioCtx.createGain(); gainNode.connect(audioCtx.destination);
-  const res = await fetch('happy-day.mp3'); const ab = await res.arrayBuffer();
-  const buffer = await audioCtx.decodeAudioData(ab);
-  musicSource = audioCtx.createBufferSource(); musicSource.buffer = buffer; musicSource.loop = true;
-  musicSource.connect(gainNode); musicSource.start(0); gainNode.gain.value = 0.4;
-}
-function setVol(val,e){ e.stopPropagation(); if(!audioCtx) initAudio(); gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2); }
-
-function handlePetting(e){ if(!pet || isSleeping) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕"); save(); }}
-
 fetchPet();
 </script>
+
 </body>
 </html>
