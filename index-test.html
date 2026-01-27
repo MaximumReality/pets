@@ -8,7 +8,6 @@
 :root { 
   --glass: rgba(0, 0, 0, 0.85); 
   --gold: #ffcc00;
-  /* iOS Safe Area Constants */
   --safe-top: env(safe-area-inset-top, 44px); 
   --safe-bottom: env(safe-area-inset-bottom, 34px);
 }
@@ -19,122 +18,133 @@ body {
   background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
   background-size: cover;
   color: #fff; 
-  height: 100dvh; /* Dynamic height for mobile */
+  height: 100dvh; /* Dynamic height for Safari */
   width: 100vw;
   overflow: hidden;
   position: fixed;
   touch-action: manipulation;
 }
 
-/* THE MASTER CONTAINER: Keeps top at top and bottom at bottom */
-#ui-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  width: 100%;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
-  box-sizing: border-box;
-  pointer-events: none; /* Let clicks pass through to the pet */
-  position: relative;
-  z-index: 10000;
-}
-
-/* TOP HUD: Anchored to the top safe area */
+/* TOP HUD - Back to the way you liked it */
 #hud-container { 
-  pointer-events: auto;
+  position: absolute;
+  top: var(--safe-top);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex; 
   flex-direction: column; 
   align-items: center; 
-  gap: 8px; 
-  width: 100%;
+  gap: 10px; 
+  width: 90%;
+  z-index: 10000;
 }
 
 .hud-bar { 
   background: var(--glass); 
-  padding: 10px 20px; 
-  border-radius: 30px; 
+  padding: 8px 15px; 
+  border-radius: 25px; 
   backdrop-filter: blur(15px); 
   border: 1px solid rgba(255,255,255,0.15); 
   display: flex; 
   align-items: center; 
   gap: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-/* BOTTOM BAR: Anchored above Safari/Home bar */
+/* MENU FIX: No more yellow line! */
+#createMenu {
+  display: none; 
+  background: var(--glass); 
+  border-radius: 20px; 
+  width: 280px; 
+  min-height: 100px; /* Prevents the line effect */
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+  border: 1px solid var(--gold);
+  z-index: 10002; 
+  overflow: hidden; 
+  margin-top: 10px;
+}
+
+/* BOTTOM BAR - Floating comfortably above Safari */
 .action-bar { 
-  pointer-events: auto;
-  align-self: center;
-  margin-bottom: 10px; /* Extra breathing room from the bottom */
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 15px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex; 
   gap: 12px; 
-  background: rgba(0,0,0,0.85); 
-  padding: 12px 20px; 
-  border-radius: 40px; 
+  z-index: 10000;
+  background: rgba(0,0,0,0.8); 
+  padding: 12px 18px; 
+  border-radius: 35px; 
   backdrop-filter: blur(20px); 
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .action-bar button { 
   background: #222; border: 1px solid #444; color: white; 
-  border-radius: 50%; width: 52px; height: 52px; font-size: 26px; 
+  border-radius: 50%; width: 54px; height: 54px; font-size: 26px; 
 }
 
-/* PET POSITIONING: Stays in the vertical center area */
+/* PET - Centered but out of the way of the bars */
 #game-world { 
   position: absolute; 
-  top: 50%; left: 50%; 
+  top: 52%; left: 50%; 
   transform: translate(-50%, -50%); 
   z-index: 50; 
   text-align: center;
-  pointer-events: auto;
 }
 
-#createMenu {
-  background: var(--glass); border-radius: 20px; width: 300px; 
-  border: 1px solid var(--gold); overflow: hidden;
-  position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-  display: none; z-index: 10002;
-}
+.pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; }
+.wander { animation: wander 14s linear infinite alternate; }
+@keyframes wander { 0% { transform: translate(-60px, 0); } 100% { transform: translate(60px, 0); } }
 </style>
 
 <body onclick="handlePetting(event)">
   <div id="night-overlay"></div>
   <div id="flash-layer" class="flash-overlay"></div>
   <div id="weather-layer"></div>
-  
-  <div id="ui-wrapper">
-    
-    <div id="hud-container">
-      <div class="hud-bar">
-        <button style="background:none; border:none; font-size:20px;" onclick="toggleMenu(event)">⚙️</button>
-        <div id="statsBox">
-          <div id="sn"><b>Casper</b></div>
-          <div id="sh">H:5%</div><div id="se">E:12%</div><div id="shp">HP:100%</div>
-        </div>
-      </div>
-      
-      <div class="audio-controls" style="display:flex; gap:10px; background:rgba(0,0,0,0.4); padding:5px 15px; border-radius:15px; pointer-events:auto;">
-        <button onclick="setVol(0, event)" style="background:none; border:none; color:white;">🔈</button>
-        <button onclick="setVol(0.3, event)" style="background:none; border:none; color:white;">🔉</button>
-        <button onclick="setVol(0.7, event)" style="background:none; border:none; color:white;">🔊</button>
+
+  <div id="hud-container">
+    <div class="hud-bar">
+      <button style="background:none; border:none; font-size:20px;" onclick="toggleMenu(event)">⚙️</button>
+      <div id="statsBox">
+        <div id="sn"><b>Casper</b></div>
+        <div id="sh">H:—</div><div id="se">E:—</div><div id="shp">HP:—</div>
       </div>
     </div>
 
     <div id="createMenu">
+      <div class="menu-tabs" style="display:flex; background:rgba(255,255,255,0.1);">
+        <button class="tab-btn active" onclick="switchTab('help')" style="flex:1; padding:10px; color:white; background:none; border:none;">Manual</button>
+        <button class="tab-btn" onclick="switchTab('hof')" style="flex:1; padding:10px; color:white; background:none; border:none;">Legends</button>
+        <button class="tab-btn" onclick="switchTab('adopt')" style="flex:1; padding:10px; color:white; background:none; border:none;">Adopt</button>
       </div>
-
-    <div id="game-world"></div>
-
-    <div class="action-bar">
-      <button onclick="feedPet(event)">🍎</button>
-      <button onclick="cleanPet(event)">🧽</button>
-      <button onclick="playPet(event)">⚽️</button>
-      <button onclick="doctorPet(event)">🩺</button>
-      <button onclick="toggleSleep(event)">🌙</button>
+      <div id="helpTab" class="menu-content" style="padding:15px; font-size:12px;">
+        <p><b>H:</b> Hunger (Drop Food 🍎)<br><b>E:</b> Energy (Sleep 🌙)<br><b>HP:</b> Health (Clean 🧽 / Med 🩺)</p>
+      </div>
+      <div id="hofTab" class="menu-content" style="display:none; padding:15px;"><div id="hofList">Loading...</div></div>
+      <div id="adoptTab" class="menu-content" style="display:none; padding:15px;">
+        <input id="petName" placeholder="Name" style="width:90%; background:#333; color:white; border:none; padding:8px; border-radius:5px; margin-bottom:5px;">
+        <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; font-weight:bold; border-radius:5px;">ADOPT</button>
+      </div>
     </div>
+
+    <div class="audio-controls" style="display:flex; gap:10px; background:rgba(0,0,0,0.4); padding:5px 15px; border-radius:15px;">
+      <button onclick="setVol(0, event)" style="background:none; border:none; color:white;">🔈</button>
+      <button onclick="setVol(0.3, event)" style="background:none; border:none; color:white;">🔉</button>
+      <button onclick="setVol(0.7, event)" style="background:none; border:none; color:white;">🔊</button>
+    </div>
+  </div>
+
+  <div id="game-world"></div>
+
+  <div class="action-bar">
+    <button onclick="feedPet(event)">🍎</button>
+    <button onclick="cleanPet(event)">🧽</button>
+    <button onclick="playPet(event)">⚽️</button>
+    <button onclick="doctorPet(event)">🩺</button>
+    <button onclick="toggleSleep(event)">🌙</button>
+  </div>
 
   </div>
 
