@@ -17,7 +17,7 @@ body {
   background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
   background-size: cover; color: #fff; 
   height: 100vh; overflow: hidden; position: fixed; width: 100%;
-  touch-action: manipulation; /* PREVENTS ZOOM */
+  touch-action: manipulation;
 }
 
 /* FULL SCREEN EFFECTS */
@@ -33,10 +33,11 @@ body {
 .do-flash { animation: lightningStrike 0.15s ease-out; }
 @keyframes lightningStrike { 0% { opacity: 1; } 100% { opacity: 0; } }
 
-/* WEATHER */
+/* WEATHER & MESSES */
 #weather-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 .rain-drop { position: absolute; background: #4fa1ff; width: 2px; height: 15px; opacity: 0.6; animation: rainFall 0.8s linear infinite; }
 @keyframes rainFall { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
+.mess { position: absolute; font-size: 28px; z-index: 6; pointer-events: none; transition: opacity 0.5s; }
 
 /* HUD */
 #hud-container { position: absolute; top: calc(var(--safe-top) + 10px); left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; }
@@ -100,7 +101,7 @@ body {
     <div id="adoptTab" class="menu-content" style="display:none;">
       <input id="petName" placeholder="Name" style="width:90%; margin-bottom:5px; background:#333; color:white; border:none; padding:8px; border-radius:5px;">
       <select id="petSpecies" style="width:90%; margin-bottom:5px; background:#333; color:white; border:none; padding:8px; border-radius:5px;">
-        <option value="bunny">Bunny</option><option value="dragon">Dragon</option><option value="unicorn">Unicorn</option><option value="cat">Cat</option><option value="fox">Fox</option>
+        <option value="bunny">Bunny</option><option value="dragon">Dragon</option><option value="unicorn">Unicorn</option><option value="cat">Cat</option><option value="fox">Fox</option><option value="dog">Dog</option>
       </select>
       <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; font-weight:bold; border-radius:5px;">ADOPT</button>
     </div>
@@ -136,6 +137,78 @@ let audioCtx, gainNode, musicSource;
 const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎", frog:"🪰" };
 const emojiMap = { bunny:"🐰", fox:"🦊", dog:"🐕", dragon:"🐲", cat:"🐱", unicorn:"🦄", frog:"🐸" };
 
+// --- ACTIONS ---
+function feedPet(e) {
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  pet.stats.hunger = Math.max(0, pet.stats.hunger - 20);
+  const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🍎";
+  f.style.left = "50%"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
+  save();
+}
+
+function cleanPet(e) {
+  e.stopPropagation(); if(!pet || pet.stats.health <= 0) return;
+  pet.stats.health = Math.min(100, pet.stats.health + 10);
+  document.querySelectorAll('.mess').forEach(m => m.style.opacity = '0');
+  setTimeout(() => document.getElementById('messes').innerHTML = '', 500);
+  spawnPop("🫧", window.innerWidth/2, window.innerHeight/2);
+  save();
+}
+
+function playPet(e) {
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  if(pet.stats.energy < 15) { spawnPop("💤 Need Sleep", window.innerWidth/2, 200); return; }
+  pet.stats.energy = Math.max(0, pet.stats.energy - 15);
+  pet.stats.xp += 20;
+  spawnPop("⚽️ XP++", window.innerWidth/2, window.innerHeight/2);
+  checkLevelUp();
+  save();
+}
+
+function doctorPet(e) {
+  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
+  pet.stats.health = Math.min(100, pet.stats.health + 30);
+  triggerFlash();
+  spawnPop("🩺", window.innerWidth/2, window.innerHeight/2);
+  save();
+}
+
+function checkLevelUp() {
+  if(pet.stats.xp >= 100) {
+    pet.stats.level++; pet.stats.xp = 0;
+    spawnPop("✨ LEVEL UP", window.innerWidth/2, 150);
+    display(pet);
+  }
+}
+
+// --- WORLD EFFECTS ---
+function triggerFlash() {
+  const flashLayer = document.getElementById('flash-layer');
+  flashLayer.classList.add('do-flash');
+  setTimeout(() => flashLayer.classList.remove('do-flash'), 150);
+}
+
+function toggleWeather() {
+  const layer = document.getElementById('weather-layer');
+  isRaining = Math.random() < 0.3;
+  layer.innerHTML = '';
+  if(isRaining) {
+    for(let i=0; i<30; i++) {
+      const drop = document.createElement('div');
+      drop.className = 'rain-drop'; drop.style.left = Math.random() * 100 + '%'; drop.style.animationDelay = Math.random() * 2 + 's';
+      layer.appendChild(drop);
+    }
+    triggerLightningLoop();
+  }
+}
+
+function triggerLightningLoop() {
+  if(!isRaining) return;
+  setTimeout(() => { triggerFlash(); if(Math.random() > 0.7) triggerLightningLoop(); }, Math.random() * 10000 + 5000);
+}
+setInterval(toggleWeather, 30000);
+
+// --- CORE ---
 async function initAudio() {
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -149,45 +222,12 @@ async function initAudio() {
 
 function setVol(val,e){ e.stopPropagation(); if(!audioCtx) initAudio(); if(audioCtx.state==='suspended') audioCtx.resume(); gainNode.gain.setTargetAtTime(val, audioCtx.currentTime, 0.2); }
 
-function toggleWeather() {
-  const layer = document.getElementById('weather-layer');
-  isRaining = Math.random() < 0.3;
-  layer.innerHTML = '';
-  if(isRaining) {
-    for(let i=0; i<30; i++) {
-      const drop = document.createElement('div');
-      drop.className = 'rain-drop'; drop.style.left = Math.random() * 100 + '%'; drop.style.animationDelay = Math.random() * 2 + 's';
-      layer.appendChild(drop);
-    }
-    triggerLightning();
-  }
-}
-
-function triggerLightning() {
-  if(!isRaining) return;
-  setTimeout(() => {
-    const flashLayer = document.getElementById('flash-layer');
-    flashLayer.classList.add('do-flash');
-    setTimeout(() => flashLayer.classList.remove('do-flash'), 150);
-    if(Math.random() > 0.7) triggerLightning();
-  }, Math.random() * 10000 + 5000);
-}
-setInterval(toggleWeather, 30000);
-
 function toggleSleep(e) {
   e.stopPropagation(); isSleeping = !isSleeping;
   const overlay = document.getElementById('night-overlay');
   overlay.style.opacity = isSleeping ? "1" : "0";
   if(gainNode) gainNode.gain.setTargetAtTime(isSleeping ? 0.05 : 0.4, audioCtx.currentTime, 1.5);
   if(isSleeping) spawnPop("💤", window.innerWidth/2, window.innerHeight/2);
-  save();
-}
-
-function feedPet(e) {
-  e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return;
-  pet.stats.hunger = Math.max(0, pet.stats.hunger - 20);
-  const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species] || "🍎";
-  f.style.left = "50%"; document.body.appendChild(f); setTimeout(()=>f.remove(), 1200);
   save();
 }
 
@@ -219,7 +259,9 @@ function updateUI(){
 }
 
 async function save(){ if(pet?.id) await db.collection("pets").doc(pet.id).update({stats:pet.stats, lastUpdated:Date.now()}); }
-function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕", e.clientX, e.clientY); if(pet.stats.xp>=100){pet.stats.level++; pet.stats.xp=0; display(pet);} save(); }}
+
+function handlePetting(e){ if(!pet || isSleeping || pet.stats.health <= 0) return; if(e.target.classList.contains('pet-img')){ pet.stats.xp += 10; spawnPop("💕", e.clientX, e.clientY); checkLevelUp(); save(); }}
+
 function spawnPop(t,x,y){ const p=document.createElement("div"); p.className="pop"; p.innerText=t; p.style.left=x+"px"; p.style.top=y+"px"; document.body.appendChild(p); setTimeout(()=>p.remove(),1200); }
 
 async function createPet(){
@@ -228,10 +270,12 @@ async function createPet(){
   display({id:res.id,name:n,species:s,stats:{hunger:50,energy:50,health:100,level:1,xp:0}});
   document.getElementById('createMenu').style.display='none';
 }
+
 async function fetchPet(){
   const snap=await db.collection("pets").orderBy("lastUpdated","desc").limit(1).get();
   if(!snap.empty) display({id:snap.docs[0].id,...snap.docs[0].data()});
 }
+
 fetchPet();
 setInterval(() => { if(pet && !isSleeping) { pet.stats.hunger = Math.min(100, pet.stats.hunger+2); updateUI(); save(); }}, 5000);
 </script>
