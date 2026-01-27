@@ -2,123 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Maximum Reality Pets</title>
   <style>
+    :root {
+      --panel-bg: rgba(0, 0, 0, 0.75);
+      --accent: #ffcc00;
+    }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #222; /* Fallback color */
-      background-image: url('bg_wp.jpg');
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
       background-size: cover;
-      background-position: center;
       color: #fff;
       overflow: hidden;
       height: 100vh;
-      width: 100vw;
+      transition: filter 1.2s ease-in-out;
     }
 
-    /* Container for both Creation and Stats in Top Right */
-    .ui-container {
+    body.sleeping { filter: brightness(0.3) saturate(0.5); }
+
+    /* UI Placement for iPhone 14 Pro Max */
+    .ui-stack {
       position: absolute;
-      top: env(safe-area-inset-top, 20px); /* Respects the iPhone Dynamic Island */
+      top: env(safe-area-inset-top, 44px);
       right: 15px;
+      width: 170px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      z-index: 10;
-      width: 180px;
+      z-index: 100;
     }
 
     .panel {
-      background-color: rgba(0, 0, 0, 0.7);
+      background: var(--panel-bg);
       padding: 12px;
-      border-radius: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(5px);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
 
-    .stats-box { font-size: 13px; line-height: 1.5; }
-    
+    h2 { margin: 0 0 8px 0; font-size: 16px; text-align: center; color: var(--accent); }
+
     .controls input, .controls select, .controls button {
       width: 100%;
-      margin-bottom: 5px;
-      padding: 8px;
-      border-radius: 8px;
+      margin-bottom: 6px;
+      padding: 10px;
+      border-radius: 10px;
       border: none;
-      box-sizing: border-box;
       font-size: 14px;
+      box-sizing: border-box;
     }
 
-    .controls button {
-      background-color: #ffcc00;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .btn-feed { background: #4cd964; color: #000; font-weight: bold; }
+    .btn-sleep { background: #5856d6; color: #fff; font-weight: bold; }
+    .btn-clean { background: #5ac8fa; color: #000; font-weight: bold; }
+    .btn-create { background: var(--accent); color: #000; font-weight: bold; }
 
-    /* The Pet & Animations */
-    .pet-wrapper {
+    .stats-text { font-size: 13px; line-height: 1.6; }
+    .stats-text b { color: var(--accent); }
+
+    /* Pet & Glow */
+    .pet-container {
       position: absolute;
-      transform-origin: bottom center;
-      /* Gentle floating/breathing animation */
-      animation: idleBob 3s ease-in-out infinite;
-      z-index: 5;
+      left: 50%;
+      bottom: 20%;
+      transform: translateX(-50%);
+      z-index: 10;
+      text-align: center;
     }
 
-    .pet {
-      width: 200px; /* Sized for iPhone screen */
+    .pet-img {
+      width: 220px;
       height: auto;
       image-rendering: pixelated;
-      /* The Glow Effect */
-      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.4));
+      animation: breathe 4s ease-in-out infinite;
     }
 
-    @keyframes idleBob {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-15px) scale(1.02); }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05) translateY(-10px); }
     }
 
-    .food {
+    /* Effects */
+    .particle {
       position: absolute;
       font-size: 40px;
-      z-index: 10;
-      animation: floatUp 1s ease-out forwards;
+      pointer-events: none;
+      z-index: 50;
+      animation: riseAndFade 1.5s ease-out forwards;
     }
 
-    @keyframes floatUp {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
+    @keyframes riseAndFade {
+      0% { transform: translateY(0) scale(0.5); opacity: 1; }
+      100% { transform: translateY(-150px) scale(1.2); opacity: 0; }
     }
   </style>
 </head>
 <body>
 
-  <div class="ui-container">
+  <div class="ui-stack">
     <div class="panel controls">
       <input id="petName" placeholder="Pet Name">
       <select id="petSpecies">
-        <option value="cat">Cat</option>
-        <option value="dragon">Dragon</option>
-        <option value="frog">Frog</option>
-        <option value="bunny">Bunny</option>
-        <option value="unicorn">Unicorn</option>
-        <option value="fox">Fox</option>
-        <option value="dog">Dog</option>
+        <option value="bunny">Bunny (🥕)</option>
+        <option value="fox">Fox (🍔)</option>
+        <option value="dog">Dog (🥩)</option>
+        <option value="dragon">Dragon (🍖)</option>
+        <option value="cat">Cat (🐠)</option>
+        <option value="unicorn">Unicorn (🍎)</option>
+        <option value="frog">Frog (🪰)</option>
       </select>
-      <button onclick="createPet()">Create Pet</button>
-      <button onclick="feedPet()" style="background: #00ffcc;">Feed Pet</button>
+      <button class="btn-create" onclick="createPet()">✨ Create</button>
     </div>
 
     <div class="panel stats-box" id="statsBox">
-      <div id="statName"><b>Name:</b> —</div>
-      <div id="statSpecies"><b>Species:</b> —</div>
-      <div id="statHunger"><b>Hunger:</b> —</div>
-      <div id="statHappiness"><b>Happiness:</b> —</div>
-      <div id="statHealth"><b>Health:</b> —</div>
+      <div class="stats-text" id="statName"><b>Name:</b> —</div>
+      <div class="stats-text" id="statHunger">Hunger: —</div>
+      <div class="stats-text" id="statEnergy">Energy: —</div>
+      <div class="stats-text" id="statHealth">Health: —</div>
+    </div>
+
+    <div class="panel controls">
+      <button class="btn-feed" onclick="feedPet()">🍎 Feed</button>
+      <button class="btn-clean" onclick="cleanPet()">🧼 Wash</button>
+      <button id="sleepBtn" class="btn-sleep" onclick="toggleSleep()">🌙 Sleep</button>
     </div>
   </div>
 
-  <div id="game-world"></div>
+  <div id="game-world" class="pet-container"></div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -135,90 +150,96 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const speciesSprites = { bunny: "bunny.png", frog: "frog.png", fox: "fox.png", cat: "cat.png", dragon: "dragon.png", unicorn: "unicorn.png", dog: "dog.png" };
-    const foodIcons = { bunny: "🥕", frog: "🪰", fox: "🍔", cat: "🐠", dragon: "🍖", unicorn: "🍎", dog: "🥩" };
-
     let currentPet = null;
+    let isSleeping = false;
+    let sleepTimer = null;
+
+    const foodMap = {
+      bunny: "🥕", fox: "🍔", dog: "🥩", dragon: "🍖",
+      cat: "🐠", unicorn: "🍎", frog: "🪰"
+    };
 
     async function fetchPets() {
-      const snapshot = await db.collection("pets").orderBy("lastUpdated", "desc").limit(1).get();
-      if (!snapshot.empty) {
-        const data = snapshot.docs[0].data();
-        displayPet({ id: snapshot.docs[0].id, ...data });
-      }
+      const snap = await db.collection("pets").orderBy("lastUpdated", "desc").limit(1).get();
+      if (!snap.empty) displayPet({ id: snap.docs[0].id, ...snap.docs[0].data() });
     }
 
     function displayPet(pet) {
       currentPet = pet;
       const world = document.getElementById("game-world");
-      world.innerHTML = ""; // Clear old pet
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "pet-wrapper";
-      wrapper.style.left = "25%"; // Centered horizontally for mobile
-      wrapper.style.bottom = "20%"; // Placed on the "ground"
-
-      const img = document.createElement("img");
-      img.src = pet.sprite;
-      img.className = "pet";
-      
-      wrapper.appendChild(img);
-      world.appendChild(wrapper);
-      updateStats();
+      world.innerHTML = `<img src="${pet.species}.png" class="pet-img">`;
+      updateStatsUI();
     }
 
-    function updateStats() {
+    function updateStatsUI() {
       if (!currentPet) return;
-      document.getElementById("statName").innerHTML = `<b>Name:</b> ${currentPet.name}`;
-      document.getElementById("statSpecies").innerHTML = `<b>Species:</b> ${currentPet.species}`;
+      document.getElementById("statName").innerHTML = `<b>${currentPet.name}</b>`;
       document.getElementById("statHunger").innerText = `Hunger: ${Math.round(currentPet.stats.hunger)}`;
-      document.getElementById("statHappiness").innerText = `Happiness: ${Math.round(currentPet.stats.happiness)}`;
+      document.getElementById("statEnergy").innerText = `Energy: ${Math.round(currentPet.stats.energy)}`;
       document.getElementById("statHealth").innerText = `Health: ${Math.round(currentPet.stats.health)}`;
+    }
+
+    async function feedPet() {
+      if (!currentPet || isSleeping) return;
+      currentPet.stats.hunger = Math.max(0, currentPet.stats.hunger - 15);
+      spawnEffect(foodMap[currentPet.species] || "🍎");
+      saveToFirebase();
+    }
+
+    async function cleanPet() {
+      if (!currentPet || isSleeping) return;
+      currentPet.stats.health = Math.min(100, currentPet.stats.health + 10);
+      spawnEffect("🧼");
+      saveToFirebase();
+    }
+
+    function toggleSleep() {
+      if (!currentPet) return;
+      isSleeping = !isSleeping;
+      document.body.classList.toggle('sleeping', isSleeping);
+      document.getElementById("sleepBtn").innerText = isSleeping ? "☀️ Wake" : "🌙 Sleep";
+
+      if (isSleeping) {
+        sleepTimer = setInterval(() => {
+          currentPet.stats.energy = Math.min(100, currentPet.stats.energy + 8);
+          spawnEffect("💤");
+          updateStatsUI();
+        }, 3000);
+      } else {
+        clearInterval(sleepTimer);
+        saveToFirebase();
+      }
+    }
+
+    async function saveToFirebase() {
+      await db.collection("pets").doc(currentPet.id).update({
+        stats: currentPet.stats,
+        lastUpdated: Date.now()
+      });
+      updateStatsUI();
+    }
+
+    function spawnEffect(text) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.innerText = text;
+      p.style.left = "50%";
+      p.style.bottom = "40%";
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1500);
     }
 
     async function createPet() {
       const name = document.getElementById("petName").value;
       const species = document.getElementById("petSpecies").value;
-      if (!name) return alert("Give your pet a name!");
-
+      if (!name) return alert("Enter a name!");
       const pet = {
-        name,
-        species,
-        sprite: speciesSprites[species],
-        stats: { hunger: 50, happiness: 50, energy: 50, health: 100 },
+        name, species, 
+        stats: { hunger: 50, energy: 50, health: 100 },
         lastUpdated: Date.now()
       };
-
       const ref = await db.collection("pets").add(pet);
       displayPet({ id: ref.id, ...pet });
-    }
-
-    async function feedPet() {
-      if (!currentPet) return;
-      
-      // Update local logic
-      currentPet.stats.hunger = Math.max(0, currentPet.stats.hunger - 15);
-      currentPet.stats.happiness = Math.min(100, currentPet.stats.happiness + 5);
-
-      // Update Firebase
-      await db.collection("pets").doc(currentPet.id).update({
-        stats: currentPet.stats,
-        lastUpdated: Date.now()
-      });
-
-      updateStats();
-      showFood();
-    }
-
-    function showFood() {
-      const icon = foodIcons[currentPet.species];
-      const food = document.createElement("div");
-      food.className = "food";
-      food.innerText = icon;
-      food.style.left = "40%";
-      food.style.bottom = "40%";
-      document.body.appendChild(food);
-      setTimeout(() => food.remove(), 1000);
     }
 
     fetchPets();
