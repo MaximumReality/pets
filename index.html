@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Reality Pets: Safari Pro</title>
+  <title>Reality Pets: Grime & Grooves</title>
   <style>
     :root { 
       --glass: rgba(0, 0, 0, 0.85); 
       --gold: #ffcc00;
       --safe-top: env(safe-area-inset-top, 59px); 
-      /* Increased bottom buffer for Safari address bar */
       --safe-bottom: env(safe-area-inset-bottom, 50px);
     }
     
@@ -17,50 +16,42 @@
       margin: 0; font-family: -apple-system, sans-serif;
       background: #1a1a1a url('bg_wp.jpg') no-repeat center center fixed;
       background-size: cover; color: #fff; 
-      /* Force body to stay within visible window */
       height: 100vh; height: -webkit-fill-available;
       overflow: hidden; position: fixed; width: 100%;
       -webkit-user-select: none; user-select: none;
     }
 
-    /* Centered Stat HUD */
+    /* HUD - Centered below Island */
+    #hud {
+      position: absolute; top: calc(var(--safe-top) + 10px); left: 50%;
+      transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+
     #statsBox {
-      position: absolute; 
-      top: calc(var(--safe-top) + 10px); 
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--glass); 
-      padding: 8px 16px; 
-      border-radius: 20px;
-      font-size: 11px; 
-      backdrop-filter: blur(15px); 
-      z-index: 9999;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex; gap: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      background: var(--glass); padding: 8px 16px; border-radius: 20px;
+      font-size: 11px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1);
+      display: flex; gap: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
 
-    .menu-wrap { 
-      position: absolute; 
-      top: calc(var(--safe-top) + 10px); 
-      left: 15px; 
-      z-index: 10000;
+    /* Audio Controls */
+    .audio-controls {
+      display: flex; gap: 5px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 15px; backdrop-filter: blur(10px);
     }
+    .audio-controls button { background: none; border: none; color: white; font-size: 16px; padding: 2px 8px; }
 
-    /* Action Bar - Pushed UP away from Safari bar */
+    /* Grime Effects */
+    .fly { position: absolute; font-size: 12px; animation: flyBuzz 0.5s infinite alternate; pointer-events: none; }
+    @keyframes flyBuzz { 0% { transform: translate(0,0); } 100% { transform: translate(5px, -5px); } }
+    
+    .mess { position: absolute; font-size: 24px; pointer-events: none; z-index: 4; transition: opacity 0.5s; }
+
+    /* Action Bar */
     .action-bar {
-      position: absolute; 
-      bottom: calc(var(--safe-bottom) + 35px); /* Lifted higher */
-      left: 50%; 
-      transform: translateX(-50%);
-      display: flex; 
-      gap: 10px; 
-      z-index: 9999;
-      background: rgba(0,0,0,0.7); 
-      padding: 10px 15px; 
-      border-radius: 30px;
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.1);
+      position: absolute; bottom: calc(var(--safe-bottom) + 35px);
+      left: 50%; transform: translateX(-50%);
+      display: flex; gap: 10px; z-index: 9999;
+      background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 30px;
+      backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
     }
 
     .action-bar button {
@@ -72,52 +63,36 @@
     /* Pet Logic */
     #game-world { position: absolute; z-index: 10; transition: all 0.8s ease; pointer-events: none; }
     .pet-img { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); cursor: pointer; pointer-events: auto; }
-    
     .wander { animation: wander 14s linear infinite alternate; }
     @keyframes wander { 0% { transform: translate(-50px, 0); } 100% { transform: translate(50px, 0); } }
-    
     .react { animation: react 0.4s ease-out; }
     @keyframes react { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     
-    .is-ghost { filter: grayscale(1) opacity(0.3) drop-shadow(0 0 15px cyan) !important; }
-
-    .food-drop {
-      position: absolute; font-size: 45px; z-index: 50;
-      animation: fall 1.2s ease-in forwards;
-    }
-    @keyframes fall {
-      0% { transform: translateY(-50px); opacity: 1; }
-      100% { transform: translateY(500px); opacity: 0; }
-    }
-
+    /* Animations */
+    .food-drop { position: absolute; font-size: 45px; z-index: 50; animation: fall 1.2s ease-in forwards; }
+    @keyframes fall { 0% { transform: translateY(-50px); opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }
     .pop { position: absolute; font-size: 35px; animation: popUp 1.2s forwards; z-index: 10001; pointer-events: none; }
     @keyframes popUp { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
   </style>
 </head>
 <body onclick="handlePetting(event)">
 
-  <div class="menu-wrap">
-    <button onclick="toggleMenu(event)" style="background:var(--glass); color:white; border:none; border-radius:50%; width:44px; height:44px; font-size:20px;">⚙️</button>
-    <div id="createMenu" style="display:none; background:var(--glass); padding:15px; border-radius:15px; margin-top:10px; width:170px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-      <input id="petName" placeholder="Name" style="width:90%; margin-bottom:8px; padding:8px; border-radius:5px; border:none;">
-      <select id="petSpecies" style="width:100%; margin-bottom:8px; padding:8px; border-radius:5px;">
-        <option value="bunny">Bunny</option><option value="fox">Fox</option>
-        <option value="dog">Dog</option><option value="dragon">Dragon</option>
-        <option value="cat">Cat</option><option value="unicorn">Unicorn</option>
-        <option value="frog">Frog</option>
-      </select>
-      <button onclick="createPet()" style="width:100%; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold; color:black;">ADOPT</button>
+  <div id="hud">
+    <div id="statsBox">
+      <div id="sn"><b>—</b></div>
+      <div id="sh">H: —</div>
+      <div id="se">E: —</div>
+      <div id="shp">HP: —</div>
+    </div>
+    <div class="audio-controls">
+      <button onclick="setVol(0, event)">🔈</button>
+      <button onclick="setVol(0.4, event)">🔉</button>
+      <button onclick="setVol(0.8, event)">🔊</button>
     </div>
   </div>
 
-  <div id="statsBox">
-    <div id="sn"><b>—</b></div>
-    <div id="sh">H: —</div>
-    <div id="se">E: —</div>
-    <div id="shp">HP: —</div>
-  </div>
-
   <div id="game-world"></div>
+  <div id="messes"></div>
 
   <div class="action-bar">
     <button onclick="feedPet(event)">🍎</button>
@@ -127,6 +102,8 @@
     <button id="resBtn" onclick="resurrectPet(event)" style="display:none; background:var(--gold); color:black;">⚡️</button>
     <button onclick="toggleSleep(event)">🌙</button>
   </div>
+
+  <audio id="bgMusic" loop src="happy-day.mp3"></audio>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -138,10 +115,10 @@
 
     let pet = null;
     let isSleeping = false;
+    const bgMusic = document.getElementById('bgMusic');
     const foodMap = { bunny:"🥕", fox:"🍔", dog:"🥩", dragon:"🍖", cat:"🐠", unicorn:"🍎", frog:"🪰" };
     const reactMap = { bunny: "🐰", fox: "🦊", dog: "🐕", cat: "😼", frog: "🐸", dragon: "🔥", unicorn: "✨" };
     const petPositions = { frog: { left: "25%", bottom: "25%" }, bunny: { left: "65%", bottom: "28%" }, fox: { left: "55%", bottom: "30%" }, dog: { left: "50%", bottom: "32%" }, cat: { left: "45%", bottom: "34%" }, unicorn: { left: "70%", bottom: "36%" }, dragon: { left: "50%", bottom: "60%" } };
-    const roamingPets = ["bunny", "fox", "dog", "cat"];
 
     function display(data) {
       pet = data;
@@ -152,10 +129,57 @@
 
       world.style.left = pos.left;
       world.style.bottom = pos.bottom;
-      world.classList.toggle("wander", roamingPets.includes(pet.species) && !isDead);
+      world.classList.toggle("wander", ["bunny", "fox", "dog", "cat"].includes(pet.species) && !isDead);
       world.innerHTML = `<img src="${pet.species}.png" class="pet-img ${isDead ? 'is-ghost' : ''}" style="width:${size}px">`;
+      
+      handleGrime();
       document.getElementById("resBtn").style.display = isDead ? "flex" : "none";
       updateUI();
+    }
+
+    function handleGrime() {
+      const world = document.getElementById("game-world");
+      // Remove old flies
+      document.querySelectorAll('.fly').forEach(f => f.remove());
+      // If health low or hunger high, add flies
+      if (pet.stats.health < 60 || pet.stats.hunger > 80) {
+        for(let i=0; i<3; i++) {
+          const fly = document.createElement('div');
+          fly.className = 'fly'; fly.innerText = '🪰';
+          fly.style.left = Math.random() * 50 + 'px';
+          fly.style.top = Math.random() * 50 + 'px';
+          world.appendChild(fly);
+        }
+        // Occasional mess on floor
+        if (Math.random() > 0.8) spawnMess();
+      }
+    }
+
+    function spawnMess() {
+      const container = document.getElementById('messes');
+      const mess = document.createElement('div');
+      mess.className = 'mess'; mess.innerText = '💩';
+      mess.style.left = (Math.random() * 60 + 20) + '%';
+      mess.style.bottom = '20%';
+      container.appendChild(mess);
+    }
+
+    function cleanPet(e) {
+      e.stopPropagation();
+      if(!pet || pet.stats.health <= 0) return;
+      pet.stats.health = Math.min(100, pet.stats.health + 15);
+      document.querySelectorAll('.mess').forEach(m => m.style.opacity = '0');
+      setTimeout(() => document.getElementById('messes').innerHTML = '', 500);
+      spawnPop("🫧🧹", window.innerWidth/2, window.innerHeight/2);
+      handleGrime();
+      save();
+    }
+
+    function setVol(val, e) {
+      e.stopPropagation();
+      bgMusic.volume = val;
+      if (val > 0) bgMusic.play().catch(() => {});
+      else bgMusic.pause();
     }
 
     function handlePetting(e) {
@@ -164,7 +188,8 @@
         e.target.classList.remove("react"); void e.target.offsetWidth; e.target.classList.add("react");
         pet.stats.xp = (pet.stats.xp || 0) + 5;
         spawnPop(reactMap[pet.species] || "💕", e.clientX, e.clientY);
-        checkGrowth(); save();
+        if (pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); }
+        save();
       }
     }
 
@@ -172,21 +197,15 @@
       e.stopPropagation(); 
       if(!pet || isSleeping || pet.stats.health <= 0) return; 
       pet.stats.hunger = Math.max(0, pet.stats.hunger - 20); 
-      const food = document.createElement("div");
-      food.className = "food-drop";
-      food.innerText = foodMap[pet.species];
-      food.style.left = "50%";
-      document.body.appendChild(food);
-      setTimeout(() => food.remove(), 1200);
+      const f = document.createElement("div"); f.className = "food-drop"; f.innerText = foodMap[pet.species]; f.style.left = "50%";
+      document.body.appendChild(f); setTimeout(() => f.remove(), 1200);
       save(); 
     }
 
-    function cleanPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 10); spawnPop("🫧", window.innerWidth/2, window.innerHeight/2); save(); }
     function playPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.energy = Math.max(0, pet.stats.energy - 15); spawnPop("⚽️", window.innerWidth/2, window.innerHeight/2); save(); }
     function doctorPet(e) { e.stopPropagation(); if(!pet || isSleeping || pet.stats.health <= 0) return; pet.stats.health = Math.min(100, pet.stats.health + 40); save(); }
     function resurrectPet(e) { e.stopPropagation(); pet.stats = { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 }; display(pet); save(); }
     function toggleSleep(e) { e.stopPropagation(); isSleeping = !isSleeping; document.body.style.filter = isSleeping ? "brightness(0.4)" : "none"; save(); }
-    function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('createMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
 
     function spawnPop(txt, x, y) {
       const p = document.createElement("div"); p.className = "pop"; p.innerText = txt;
@@ -204,17 +223,7 @@
     }
 
     async function save() { if(pet.id) await db.collection("pets").doc(pet.id).update({ stats: pet.stats, lastUpdated: Date.now() }); updateUI(); }
-    function checkGrowth() { if (pet.stats.xp >= 100) { pet.stats.level++; pet.stats.xp = 0; display(pet); } }
     
-    async function createPet() {
-      const n = document.getElementById("petName").value;
-      const s = document.getElementById("petSpecies").value;
-      if (!n) return;
-      const res = await db.collection("pets").add({ name: n, species: s, lastUpdated: Date.now(), stats: { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 } });
-      display({ id: res.id, name: n, species: s, stats: { hunger: 50, energy: 50, health: 100, level: 1, xp: 0 } });
-      document.getElementById('createMenu').style.display = 'none';
-    }
-
     async function fetchPet() {
       const snap = await db.collection("pets").orderBy("lastUpdated", "desc").limit(1).get();
       if (!snap.empty) display({ id: snap.docs[0].id, ...snap.docs[0].data() });
