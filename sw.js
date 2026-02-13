@@ -1,9 +1,17 @@
-const CACHE_NAME = 'ls-pets-v1';
+const CACHE_NAME = 'ls-pets-v1.1';
 const ASSETS = [
   'index.html',
   'manifest.json',
   'bg_wp.JPG',
-  'happy-day.mp3'
+  'happy-day.mp3',
+  'sw.js',
+  'bunny.png',
+'cat.png',
+'dog.png',
+'dragon.png',
+'fox.png',
+'frog.png',
+'unicorn.png'
 ];
 
 // Installs the service worker
