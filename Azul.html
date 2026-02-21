@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azul the Sphynx</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+    body { line-height: 1.6; color: #333; background: #fffaf5; overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      background: #5aa469;
+      color: white;
+      padding: 20px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header h1 { font-size: 1.8rem; }
+    nav a { margin-left: 20px; font-weight: 500; transition: color 0.3s; }
+    nav a:hover { color: #ffdd57; }
+
+    .hero {
+      background: url('https://maximumreality.github.io/bessara_blast/azul_insight.png') no-repeat center center/cover;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      padding: 0 20px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    }
+    .hero h2 { font-size: 3rem; margin-bottom: 20px; }
+    .hero p { font-size: 1.2rem; margin-bottom: 30px; max-width: 600px; }
+    .hero button {
+      background: #ffdd57;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .hero button:hover { transform: scale(1.1); }
+
+    section { padding: 80px 50px; }
+    section h2 { text-align: center; margin-bottom: 50px; font-size: 2.5rem; color: #5aa469; }
+
+    .about, .fun-facts {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 40px;
+    }
+    .about div, .fun-facts div {
+      flex: 1 1 300px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: #fff3e6;
+      transition: transform 0.3s;
+    }
+    .about div:hover, .fun-facts div:hover { transform: translateY(-10px); }
+
+    .about img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ffdd57;
+      color: #5aa469;
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      margin-right: 5px;
+    }
+
+    .contact form {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .contact input, .contact textarea {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    .contact button {
+      background: #5aa469;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .contact button:hover { background: #4a8c56; }
+
+    footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .paw {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Paw_print.svg/1024px-Paw_print.svg.png');
+      background-size: cover;
+      opacity: 0.8;
+      animation: fadeOut 1s forwards;
+    }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px) scale(0.5); } }
+
+    @media(max-width: 768px) {
+      header { flex-direction: column; text-align: center; }
+      nav { margin-top: 10px; }
+      .hero h2 { font-size: 2.2rem; }
+      section { padding: 50px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Azul 🐾</h1>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#fun-facts">Fun Facts</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>Hello! I'm Azul</h2>
+    <p>The hairless Sphynx cat from Morocco who speaks American English.  
+       You can find me as a YouTube actor at <a href="https://www.youtube.com/@maximumrealitylori" target="_blank" style="color:#ffdd57;">Maximum Reality Lori</a>,  
+       and I create research tools like <a href="https://maximumreality.github.io/omni-azul/" target="_blank" style="color:#ffdd57;">Omni-Azul (Academic)</a>  
+       and <a href="https://maximumreality.github.io/DeclassifyX/index.html" target="_blank" style="color:#ffdd57;">DeclassifyX (FOIA)</a>.</p>
+    <button onclick="scrollToSection('about')">Meet Me</button>
+  </section>
+
+  <section id="about">
+    <h2>About Azul</h2>
+    <div class="about">
+      <div>
+        <img src="https://maximumreality.github.io/bessara_blast/azul_insight.png" alt="Azul the Sphynx Headshot">
+        <h3>Who I Am</h3>
+        <p>I'm Azul, a playful hairless Sphynx cat with a personality as vibrant as my looks.</p>
+        <div class="badge">🇲🇦 From Morocco</div>
+        <div class="badge">🇺🇸 Speaks American English</div>
+        <div class="badge" style="background:#FF0000; color:white;">
+          <a href="https://www.youtube.com/@maximumrealitylori" target="_blank" style="color:white;">YouTube Actor</a>
+        </div>
+        <div class="badge" style="background:#4a90e2; color:white;">
+          <a href="https://maximumreality.github.io/omni-azul/" target="_blank" style="color:white;">Omni-Azul (Academic)</a>
+        </div>
+        <div class="badge" style="background:#28a745; color:white;">
+          <a href="https://maximumreality.github.io/DeclassifyX/index.html" target="_blank" style="color:white;">DeclassifyX (FOIA)</a>
+        </div>
+      </div>
+      <div>
+        <h3>My Hobbies</h3>
+        <p>Sunbathing, studying the universe, dreaming, and stealing hearts wherever I go.</p>
+      </div>
+      <div>
+        <h3>Favorite Things</h3>
+        <p>Warm blankets, nylon toys, yummy treats, and cozy naps under the blankets, or in a sunbeam.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="fun-facts">
+    <h2>Fun Facts About Me</h2>
+    <div class="fun-facts">
+      <div>
+        <h3>Unique Look</h3>
+        <p>Being hairless makes me stand out from other cats. I rock the Sphynx look with pride!</p>
+      </div>
+      <div>
+        <h3>Super Social</h3>
+        <p>I love attention and enjoy meeting new friends, both human and furry.</p>
+      </div>
+      <div>
+        <h3>Warm Heart</h3>
+        <p>Even without fur, I have a big heart filled with love and purrs for everyone.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <h2>Contact Azul</h2>
+    <p>Email Azul directly at <a href="mailto:Azul@maximumreality.xyz">Azul@maximumreality.xyz</a> or use the form below:</p>
+    <form onsubmit="submitForm(event)">
+      <input type="text" placeholder="Your Name" required>
+      <input type="email" placeholder="Your Email" required>
+      <textarea placeholder="Message for Azul" rows="5" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Azul the Sphynx. 🐾 | YouTube: <a href="https://www.youtube.com/@maximumrealitylori" target="_blank" style="color:#ffdd57;">Maximum Reality Lori</a> |  
+       Academic Research: <a href="https://maximumreality.github.io/omni-azul/" target="_blank" style="color:#ffdd57;">Omni-Azul</a> |  
+       FOIA Research: <a href="https://maximumreality.github.io/DeclassifyX/index.html" target="_blank" style="color:#ffdd57;">DeclassifyX</a>
+    </p>
+  </footer>
+
+  <script>
+    function scrollToSection(sectionId) {
+      document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+      const name = event.target[0].value;
+      const email = event.target[1].value;
+      const message = event.target[2].value;
+      const mailtoLink = `mailto:Azul@maximumreality.xyz?subject=Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(message + "\n\nFrom: " + email)}`;
+      window.location.href = mailtoLink;
+    }
+
+    // Paw prints with random rotation and scale
+    document.addEventListener('mousemove', e => {
+      const paw = document.createElement('div');
+      paw.classList.add('paw');
+      paw.style.left = e.pageX - 15 + 'px';
+      paw.style.top = e.pageY - 15 + 'px';
+      const rotation = (Math.random() * 60 - 30) + 'deg';
+      const scale = (Math.random() * 0.7 + 0.5);
+      paw.style.transform = `rotate(${rotation}) scale(${scale})`;
+      document.body.appendChild(paw);
+      setTimeout(() => paw.remove(), 1000);
+    });
+  </script>
+</body>
+</html>
